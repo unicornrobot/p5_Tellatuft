@@ -12,6 +12,7 @@ let portButton;
 let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
+
 let sensor0 = 0;
 let sensor1 = 0;
 let sensor2 = 0;
@@ -25,6 +26,11 @@ let sensors = [];
 let splitVal;
 
 let debugMode = true; // Start in debug mode
+let offlineMode = false; // Global variable to track offline mode
+let sampleData = []; // Array to hold generated sample data
+
+
+
 let graphData = []; // Array to store historical data for each sensor
 const maxDataPoints = 100; // Maximum number of data points to store for each sensor
 
@@ -49,7 +55,10 @@ let colors = ["#F94144", "#F65A38", "#F3722C",
               "#52838F", "#577590"]
 
 // Add this near the top with other global variables
-let viewMode = 4; // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower
+let viewMode
+if (offlineMode){viewMode = 5;} else {viewMode = 4;}
+
+ // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
 
 let flowerX = 0;
 const flowerColors = [
@@ -64,8 +73,7 @@ let capturedData = [];
 let isCapturing = true;
 let summaryFlower = null;
 
-let offlineMode = false; // Global variable to track offline mode
-let sampleData = []; // Array to hold generated sample data
+
 
 let waveHeight; // Declare waveHeight as a global variable
 
@@ -186,7 +194,9 @@ function draw() {
       break;
     case 4:
       drawSummary();
-      //drawWaveformGarden();
+      break;
+    case 5:
+      drawWaveformGarden();
       break;
   }
 
@@ -773,6 +783,10 @@ function drawWaveformGarden() {
   // Use either capturedData or sampleData based on offline mode
   const dataToUse = offlineMode ? sampleData : capturedData;
 
+  //dataToUse, startY, distance, and startHue
+  drawDataWaves(dataToUse, yOffset + 100, hillHeight * 2, 90); // Adjust parameters as needed
+  drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
+  /*
   // Draw land
   for (let i = 0; i < 5; i++) {
     const yBase = yOffset + (i + 1) * hillHeight * 2 + 50;
@@ -782,7 +796,7 @@ function drawWaveformGarden() {
     const hillsHue = 90 + i * 10; // Vary from 90 (yellowish green) to 130 (blueish green)
     //const waveHue = 90 + i * 10; 
     
-    // Draw ground
+   // Draw ground
     fill(hillsHue, 60, 60);
     stroke(hillsHue, 30, 30);
     strokeWeight(2);
@@ -813,7 +827,8 @@ function drawWaveformGarden() {
     curveVertex(width, yBase);
     curveVertex(width, height);
     endShape(CLOSE);
-  }
+  }*/
+
 
   // Draw clouds based on all captured sensor data
   for (let i = 0; i < dataToUse.length; i++) {
@@ -832,7 +847,7 @@ function drawWaveformGarden() {
 /**
  * Draws water waves based on sensor data. Each wave is assigned a unique blue hue
  * and its height is influenced by the sensor data and Perlin noise for organic variation.
- */
+ *//*
 for (let i = 0; i < capturedData.length; i++) {
   const sensorData = capturedData[i]; // Extracts the sensor data for the current iteration
   const total = sensorData.reduce((acc, curr) => acc + curr, 0); // Calculates the total sum of the sensor data
@@ -857,8 +872,55 @@ for (let i = 0; i < capturedData.length; i++) {
   }
   endShape(); // Ends the shape drawing
 }
-
+*/
 }
+
+
+function drawDataWaves(dataToUse, startY, distance, startHue) {
+  for (let i = 0; i < 5; i++) {
+    const yBase = startY + (i + 1) * distance; // Use the distance parameter for spacing
+    const avgSum = dataToUse[i];
+    
+    // Calculate a unique green hue for each wave
+    const hillsHue = startHue + i * 10; // Vary hue based on starting color
+    
+    // Draw ground
+    fill(hillsHue, 60, 60);
+    stroke(hillsHue, 30, 30);
+    strokeWeight(2);
+    beginShape();
+    curveVertex(0, height);
+    curveVertex(0, yBase);
+    
+    // Draw waveform
+    let prevX = 0;
+    let prevY = yBase;
+    for (let x = 0; x <= width; x += 10) {
+      const index = floor(map(x, 0, width, 0, dataToUse.length - 1));
+      const value = dataToUse[index][i]; // Use dataToUse instead of capturedData
+      const noiseValue = noise(x * 0.01, i * 10) * 20; // Generates a Perlin noise value for organic variation
+      const y = yBase - map(value, 0, 100, 0, distance * 0.3) - noiseValue;
+      
+      curveVertex(x, y);
+      
+      /*// Draw tree (but not on every iteration to reduce density)
+      if (x % 60 == 0 && x > 0) {
+        drawTree(prevX + (x - prevX) / 2, (prevY + y) / 2, map(value, 0, 100, treeBaseSize, treeBaseSize * 3), hillsHue);
+      }
+      */
+      prevX = x;
+      prevY = y;
+    }
+    
+    curveVertex(width, yBase);
+    curveVertex(width, height);
+    endShape(CLOSE);
+  }
+}
+
+
+
+
 
 function drawTree(x, y, size, hue) {
   push();
