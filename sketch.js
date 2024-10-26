@@ -790,7 +790,7 @@ function drawWaveformGarden() {
   drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
   
 
-
+/*
   // Draw clouds based on all captured sensor data
   for (let i = 0; i < dataToUse.length; i++) {
     const sensorData = dataToUse[i];
@@ -804,12 +804,9 @@ function drawWaveformGarden() {
     drawCloud(cloudX, cloudY, cloudSize);
   //}
 }
-
-
-///FUNCTIONS//
-
-
+  */
 }
+///FUNCTIONS//
 
 function drawCloud(x, y, size) {
   push();
