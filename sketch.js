@@ -33,6 +33,7 @@ let sampleData = []; // Array to hold generated sample data
 
 let graphData = []; // Array to store historical data for each sensor
 const maxDataPoints = 100; // Maximum number of data points to store for each sensor
+let hillHeight = 30; //value of disatnce between 
 
 let  w=500
 
@@ -85,6 +86,11 @@ function setup() {
   noFill()
   strokeWeight(3)
     vel = TWO_PI / 300
+
+    WebMidi
+    .enable()
+    .then(onEnabled)
+    .catch(err => alert(err));
   
   
   createCanvas(windowWidth, windowHeight);
@@ -126,6 +132,34 @@ function setup() {
 
   waveHeight = height / 20; // Initialize waveHeight based on the canvas height
 }
+
+//WEBMIDI//
+function onEnabled() {
+  console.log("MIDI enabled");
+	// Display available MIDI input devices
+	if (WebMidi.inputs.length < 1)
+		console.log("No device detected.");
+	else
+		WebMidi.inputs.forEach((device, index) => {
+			console.log(`${index}: ${device.name}`);
+		});
+	
+  const myMidi = WebMidi.inputs[0];
+  // const mySynth = WebMidi.getInputByName("TYPE NAME HERE!")
+  
+	myMidi.addListener("noteon", onNote);
+  myMidi.addListener("controlchange", onCC);	
+}
+function onNote(e) {
+	//console.log(`${e.note.identifier} Attack ${e.note.attack} Octave ${e.note.octave}`);
+}
+function onCC(e) {
+	console.log(`${e.controller.number} ${e.value}`);
+	//circle(width/2,height/2,e.value*height,e.value*height)
+  hillHeight = map(e.value,0,0.9,0,30);
+}
+
+
 
 // Function to generate sample data
 function generateSampleData() {
@@ -773,7 +807,7 @@ function drawWaveformGarden() {
   colorMode(HSB, 360, 100, 100, 100);
   background(200, 30, 95); // Light blue sky
   
-  const hillHeight = height / 30; // width between the hills
+  //const hillHeight = height / 30; // width between the hills
   const treeBaseSize = 10;
   const yOffset = 100; // Vertical offset for waves
   
