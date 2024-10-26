@@ -12,6 +12,9 @@ let portButton;
 let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
+//webmidi//
+let mappedControllerValues = [100,13,7,21,36,100,100,100]; 
+
 
 let sensor0 = 0;
 let sensor1 = 0;
@@ -27,6 +30,7 @@ let splitVal;
 
 let debugMode = true; // Start in debug mode
 let offlineMode = true; // Global variable to track offline mode
+let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
 
@@ -154,9 +158,11 @@ function onNote(e) {
 	//console.log(`${e.note.identifier} Attack ${e.note.attack} Octave ${e.note.octave}`);
 }
 function onCC(e) {
-	console.log(`${e.controller.number} ${e.value}`);
-	//circle(width/2,height/2,e.value*height,e.value*height)
-  hillHeight = map(e.value,0,0.9,0,30);
+  if(midiLogRaw){
+    console.log(`${e.controller.number} ${e.value}`)
+  };
+  // Map the controller value for later use
+  mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
 }
 
 
@@ -809,7 +815,7 @@ function drawWaveformGarden() {
   
   //const hillHeight = height / 30; // width between the hills
   const treeBaseSize = 10;
-  const yOffset = 100; // Vertical offset for waves
+  //const yOffset = 100; // Vertical offset for waves
   
   // Draw sun
   fill(45, 100, 100);
@@ -820,8 +826,19 @@ function drawWaveformGarden() {
   const dataToUse = offlineMode ? sampleData : capturedData;
 
   //dataToUse, startY, distance, and startHue
-  drawDataWaves(dataToUse, yOffset + 100, hillHeight * 2, 90); // Adjust parameters as needed
-  drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
+ // drawDataWaves(dataToUse, yOffset + 100, hillHeight * 2, 90); // Adjust parameters as needed
+ // drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
+console.log(mappedControllerValues.map(value => Math.round(value)).join(','));
+
+let landHeight =100;
+let seaHeight =200;
+   landHeight = map(mappedControllerValues[3], 0, 100, 0, height);
+   seaHeight = map(mappedControllerValues[4], 0, 100, 0, height);
+
+ //console.log(mappedControllerValues[3]);
+  drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
+  drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2] * 2, 200);
+
   
 
 /*
