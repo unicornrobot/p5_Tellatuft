@@ -12,8 +12,8 @@ let portButton;
 let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
-//webmidi//
-let mappedControllerValues = [100,13,7,21,36,100,100,100]; 
+//webmidi//defaults.
+let mappedControllerValues = [100,13,7,21,36,100,100,100,0,0]; 
 
 
 let sensor0 = 0;
@@ -59,6 +59,9 @@ let colors = ["#F94144", "#F65A38", "#F3722C",
               "#6AB47C", "#43AA8B", "#4D908E",
               "#52838F", "#577590"]
 
+
+let sunColor = "#FFFF00"; // Yellow color for the sun
+
 // Add this near the top with other global variables
 let viewMode
 if (offlineMode){viewMode = 5;} else {viewMode = 4;}
@@ -93,7 +96,7 @@ function setup() {
 
     WebMidi
     .enable()
-    .then(onEnabled)
+    .then(onMidiEnabled)
     .catch(err => alert(err));
   
   
@@ -138,7 +141,7 @@ function setup() {
 }
 
 //WEBMIDI//
-function onEnabled() {
+function onMidiEnabled() {
   console.log("MIDI enabled");
 	// Display available MIDI input devices
 	if (WebMidi.inputs.length < 1)
@@ -150,8 +153,44 @@ function onEnabled() {
 	
   const myMidi = WebMidi.inputs[0];
   // const mySynth = WebMidi.getInputByName("TYPE NAME HERE!")
+  // Map of note identifiers to button actions
+  //can be variable sets or function calls.
+  const buttonOnActions = {
+    "G#-1": () => sunColor="#FFA500",
+    "A-1": () => console.log("button a-1 pressed"),
+    "A#-1": () => viewMode = 1,
+    // Add more mappings as needed
+};
+
+const buttonOffActions = {
+  "G#-1": () => sunColor="#FFFF00",
+  "A-1": () => console.log("button a-1 released"),
+  "A#-1": () => console.log("view changed"),
+  // Add more mappings as needed
+};
   
-	myMidi.addListener("noteon", onNote);
+	//myMidi.addListener("noteon", onNote);
+
+///BUTTONS///
+  // Listen for note on messages
+  myMidi.addListener("noteon", e => {
+    console.log(`${e.note.identifier}`);
+    // Check if the note identifier is mapped to an action
+    if (buttonOnActions[e.note.identifier]) {
+        buttonOnActions[e.note.identifier](); // Call the mapped action
+    }
+});
+
+// Listen for note off messages
+myMidi.addListener("noteoff", e => {
+    console.log(`${e.note.identifier}`);
+    // Trigger an action when button is released
+    if (buttonOffActions[e.note.identifier]) {
+        buttonOffActions[e.note.identifier](); // Call the mapped action
+    }
+});
+
+//KNOBS
   myMidi.addListener("controlchange", onCC);	
 }
 function onNote(e) {
@@ -818,7 +857,7 @@ function drawWaveformGarden() {
   //const yOffset = 100; // Vertical offset for waves
   
   // Draw sun
-  fill(45, 100, 100);
+  fill(sunColor);
   noStroke();
   circle(width - 50, 50, 80);
   
@@ -837,7 +876,7 @@ let seaHeight =200;
 
  //console.log(mappedControllerValues[3]);
   drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
-  drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2] * 2, 200);
+  drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2], 200);
 
   
 
