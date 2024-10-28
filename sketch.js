@@ -34,7 +34,7 @@ let splitVal;
 
 let debugMode = true; // Start in debug mode
 let offlineMode = true; // Global variable to track offline mode
-let midiLogRaw = true;
+let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
 
@@ -65,8 +65,10 @@ let colors = ["#F94144", "#F65A38", "#F3722C",
               "#6AB47C", "#43AA8B", "#4D908E",
               "#52838F", "#577590"]
 
+let sunColor;
+let sunAlpha = 50;
 
-let sunColor = "#FFFF00"; // Yellow color for the sun
+//
 
 // Add this near the top with other global variables
 let viewMode
@@ -94,7 +96,7 @@ let waveHeight; // Declare waveHeight as a global variable
 function setup() {
   fullscreen();
   //textFont(myFont);
-  colorMode(HSB)
+  colorMode(HSB,360,100,100,100)
   blendMode(SCREEN)
   noFill()
   strokeWeight(3)
@@ -107,6 +109,8 @@ function setup() {
   
   
   createCanvas(windowWidth, windowHeight);
+
+  sunColor = color(60, 100, 100, 10);
    
   // serial constructor
    serial = new p5.WebSerial();
@@ -146,134 +150,6 @@ function setup() {
   waveHeight = height / 20; // Initialize waveHeight based on the canvas height
 }
 
-//WEBMIDI//
-function onMidiEnabled() {
-  console.log("MIDI enabled");
-	// Display available MIDI input devices
-	if (WebMidi.inputs.length < 1)
-		console.log("No device detected.");
-	else
-		WebMidi.inputs.forEach((device, index) => {
-			console.log(`${index}: ${device.name}`);
-		});
-	
-  const myMidi = WebMidi.inputs[0];
-  // const mySynth = WebMidi.getInputByName("TYPE NAME HERE!")
-  // Map of note identifiers to button actions
-  //can be variable sets or function calls.
-  const buttonOnActions = {
-    "G#-1": () => sunColor="#FFA500", //1
-    "A-1": () => console.log("button a-1 pressed"), //2
-    "A#-1": () => noFunc = 1,  //3
-    "B-1": () => noFunc = 1,  //4
-    "C0": () => noFunc = 1,  //5
-    "C#0": () => noFunc = 1,  //6
-    "D0": () => noFunc = 1,  //7
-    "D#0": () => noFunc = 1,  //8
-    "E0": () => noFunc = 1,  //9
-    "F0": () => noFunc = 1,  //10
-    "F#0": () => noFunc = 1,  //11
-    "G0": () => noFunc = 1,  //12
-    "G#0": () => noFunc = 1,  //13
-    "A0": () => noFunc = 1,  //14
-    "A#0": () => noFunc = 1,  //15
-    "B0": () => noFunc = 1,  //16 
-
-    //KNOB BUTTONS LAYER A
-    "C-1": () => savedControllerValues[1] = round(mappedControllerValues[1],0),  //knob1 value
-    "C#-1": () => savedControllerValues[2] = round(mappedControllerValues[2],0),  //knob2 value
-    "D-1": () => savedControllerValues[3] = round(mappedControllerValues[3],0),  //knob3 value
-    "D#-1": () => savedControllerValues[4] = round(mappedControllerValues[4],0),  //knob4 value
-    "E-1": () => savedControllerValues[5] = round(mappedControllerValues[5],0),  //knob5 value
-    "F-1": () => savedControllerValues[6] = round(mappedControllerValues[6],0),  //knob6  value
-    "F#-1": () => savedControllerValues[7] = round(mappedControllerValues[7],0),  //knob7 value
-    "G-1": () => savedControllerValues[8] = round(mappedControllerValues[8],0),  //knob8 value
-
-    // SLIDER IS  10th position in the array
-
-    //LAYER B
-    "C1": () => savedControllerValues[9] = round(mappedControllerValues[11],0),  //knob9 value
-    "C#1": () => savedControllerValues[10] = round(mappedControllerValues[12],0),  //knob10 value
-    "D1": () => savedControllerValues[11] = round(mappedControllerValues[13],0),  //knob11 value
-    "D#1": () => savedControllerValues[12] = round(mappedControllerValues[14],0),  //knob12 value
-    "E1": () => savedControllerValues[13] = round(mappedControllerValues[15],0),  //knob13 value
-    "F1": () => savedControllerValues[14] = round(mappedControllerValues[16],0),  //knob14  value
-    "F#1": () => savedControllerValues[15] = round(mappedControllerValues[17],0),  //knob15 value
-    "G1": () => savedControllerValues[16] = round(mappedControllerValues[18],0),  //knob16 value
-    
-    
-};
-
-const buttonOffActions = {
-  "G#-1": () => sunColor="#FFFF00",
-  "A-1": () => console.log("button a-1 released"),
-  "A#-1": () => noFunc = 1,
-  "B-1": () => noFunc = 1,  //4
-  "C0": () => noFunc = 1,  //5
-  "C#0": () => noFunc = 1,  //6
-  "D0": () => noFunc = 1,  //7
-  "D#0": () => noFunc = 1,  //8
-    "E0": () => noFunc = 1,  //9
-    "F0": () => noFunc = 1,  //10
-    "F#0": () => noFunc = 1,  //11
-    "G0": () => noFunc = 1,  //12
-    "G#0": () => noFunc = 1,  //13
-    "A0": () => noFunc = 1,  //14
-    "A#0": () => noFunc = 1,  //15
-    "B0": () => noFunc = 1,  //16 
-};
-  
-	//myMidi.addListener("noteon", onNote);
-
-  // Function to read knob values before using them
-function readKnobValues() {
-  // Example of how to use the stored knob values
-  for (let i = 0; i < midiKnobValues.length; i++) {
-      if (midiKnobValues[i] !== undefined) {
-          //console.log(`Knob ${i}: ${midiKnobValues[i]}`);
-          savedControllerValues[i] = mappedControllerValues[i];
-      }
-  }
-}
-
-///BUTTONS///
-  // Listen for note on messages
-  myMidi.addListener("noteon", e => {
-    console.log(`${e.note.identifier}`);
-    // Check if the note identifier is mapped to an action
-    if (buttonOnActions[e.note.identifier]) {
-        buttonOnActions[e.note.identifier](); // Call the mapped action
-    }
-});
-
-// Listen for note off messages
-myMidi.addListener("noteoff", e => {
-    //console.log(`${e.note.identifier}`);
-    // Trigger an action when button is released
-    if (buttonOffActions[e.note.identifier]) {
-        buttonOffActions[e.note.identifier](); // Call the mapped action
-    }
-
-    //console.log("saved: " + savedControllerValues.map(value => Math.round(value)).join(','));
-    
-});
-
-//KNOBS
-  myMidi.addListener("controlchange", onCC);	
-}
-function onNote(e) {
-	console.log(`${e.controller.number} `);
-  mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
-}
-function onCC(e) {
-  if(midiLogRaw){
-    console.log(`${e.controller.number} ${e.value}`)
-    //console.log(`${e.controller.identifier} ${e.controller.number}`);
-  };
-  // Map the controller value for later use
-  mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
-  savedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
-}
 
 
 
@@ -661,6 +537,8 @@ function drawGeometricAnimations() {
   // Display sensor values
   textAlign(LEFT, TOP);
   textSize(12);
+  fill(1);
+  rect(10,10,50,100);
   for (let i = 0; i < 5; i++) {
     fill(i * 72 % 360, 100, 100);
     text(`S${i}: ${sensors[i]}`, 10, 10 + i * 20);
@@ -920,7 +798,7 @@ function drawWaveformGarden() {
     waveHeight = height / 20; // Fallback definition if not set
   }
 
-  colorMode(HSB, 360, 100, 100, 100);
+  //colorMode(HSB, 360, 100, 100, 100);
   background(200, 30, 95); // Light blue sky
   
   //const hillHeight = height / 30; // width between the hills
@@ -928,7 +806,7 @@ function drawWaveformGarden() {
   //const yOffset = 100; // Vertical offset for waves
   
   // Draw sun
-  fill(sunColor);
+  fill(60,100,100,sunAlpha);
   noStroke();
   circle(width - 50, 50, 80);
   
@@ -940,10 +818,10 @@ function drawWaveformGarden() {
  // drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
 //console.log(mappedControllerValues.map(value => Math.round(value)).join(','));
 
-let landHeight =100;
-let seaHeight =200;
-   landHeight = map(mappedControllerValues[3], 0, 100, 0, height);
-   seaHeight = map(mappedControllerValues[4], 0, 100, 0, height);
+let landHeight =300;
+let seaHeight =600;
+   landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
+   seaHeight = map(mappedControllerValues[4], 0, 100, height, 0);
 
  //console.log(mappedControllerValues[3]);
   drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
