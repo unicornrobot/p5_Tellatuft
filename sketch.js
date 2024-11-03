@@ -13,6 +13,7 @@ let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
 //webmidi//defaults.
+//GLOBAL VALUES TO SAVE CONSTOLLER VALUES
 let mappedControllerValues = [0,13,7,21,36,0,0,0,0,0,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
@@ -72,7 +73,7 @@ let sunAlpha = 50;
 
 // Add this near the top with other global variables
 let viewMode
-if (offlineMode){viewMode = 5;} else {viewMode = 4;}
+if (offlineMode){viewMode = 6;} else {viewMode = 4;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
 
@@ -223,6 +224,9 @@ function draw() {
       break;
     case 5:
       drawWaveformGarden();
+      break;
+    case 6: // New case for circular line graph view
+      drawCircularLineGraph();
       break;
   }
 
@@ -456,7 +460,7 @@ function keyPressed() {
     debugMode = !debugMode;
   }
   if (key === 'v' || key === 'V') {
-    viewMode = (viewMode + 1) % 5; // Now cycles through 5 views
+    viewMode = (viewMode + 1) % 6; // Now cycles through 6 views
     if (viewMode === 4) {
       // Reset capture for summary flower view
       capturedData = [];
@@ -659,7 +663,7 @@ function drawSummary() {
   } else {
     // Draw the summary viz when the edge is reached
     if (summaryFlower) {
-      drawWaveformGarden() 
+      viewMode = 6; 
     }
   }
 }
@@ -948,6 +952,58 @@ function drawWaveformLegend() {
   //text("Red line: Average", legendX, legendY + 20);
   text("Wave: Sensor readings", legendX, legendY + 40);
   text("Trees: Data points", legendX, legendY + 60);
+}
+
+// New function to draw circular line graphs
+function drawCircularLineGraph() {
+  background(0);
+  const centerX = width / 2;
+  const centerY = height / 2;
+  //const startRadius = height * 0.3; // Start point of each sensor data as a circle of size 50% of screen height
+  //const maxRadius = height * 0.5; // Max sensor data as a circle at 70% of screen height
+  let startRadius = mappedControllerValues[1]*2.8;
+  let maxRadius = mappedControllerValues[2]*3;
+
+  const angleStep = TWO_PI / totalInputs; // Angle step for each sensor
+
+  // Use either capturedData or sampleData based on offline mode
+  const dataToUse = offlineMode ? sampleData : capturedData;
+
+  for (let i = 0; i < totalInputs; i++) {
+    const sensorData = dataToUse.map(data => data[i]); // Get data for the current sensor
+    const points = []; // Store points for the line graph
+
+    for (let j = 0; j < sensorData.length; j++) {
+      const angle = j * (TWO_PI / sensorData.length); // Calculate angle for each data point
+      const sensorValue = sensorData[j];
+      const sensorRadius = map(sensorValue, 0, 100, startRadius, maxRadius); // Map sensor value to radius
+
+      // Calculate the position for the sensor's point
+      const x = centerX + cos(angle) * sensorRadius;
+      const y = centerY + sin(angle) * sensorRadius;
+
+      points.push({ x, y }); // Store the point
+    }
+
+    // Smooth out the graph lines by using curveVertex instead of vertex and connect the first and last values with a line
+    stroke(colors[i % colors.length]);
+    strokeWeight(2);
+    noFill();
+    beginShape();
+    for (let j = 0; j < points.length; j++) {
+      const point = points[j];
+      if (j === 0) {
+        vertex(point.x, point.y); // First point
+      } else {
+        curveVertex(point.x, point.y); // Smooth curve for the rest of the points
+      }
+    }
+    // Connect the last point to the first point to close the circle
+    curveVertex(points[0].x, points[0].y); // Connect the last point to the first point with a smooth curve
+    endShape(CLOSE); // Ensure the points are joined so it is a continuous graph all the way around the circle
+  }
+
+
 }
 
 

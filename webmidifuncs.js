@@ -25,7 +25,7 @@ function onMidiEnabled() {
     // Map of note identifiers to button actions
     //can be variable sets or function calls.
     const buttonOnActions = {
-      "G#-1": () => sunColor="#FFA500", //1
+      "G#-1": () => sunColor="#FF0000", //1
       "A-1": () => console.log("button a-1 pressed"), //2
       "A#-1": () => noFunc = 1,  //3
       "B-1": () => noFunc = 1,  //4
