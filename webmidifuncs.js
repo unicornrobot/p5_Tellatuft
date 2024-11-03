@@ -8,10 +8,14 @@ WebMidi
 .catch(err => alert(err));
 */
 
+  // New array to store the captured controller values
+  let capturedControllerValues = [];
+
 
 //WEBMIDI//
 function onMidiEnabled() {
     console.log("MIDI enabled");
+    loadStoredControllerValues(); // Load stored values on MIDI enable
       // Display available MIDI input devices
       if (WebMidi.inputs.length < 1)
           console.log("No device detected.");
@@ -25,8 +29,14 @@ function onMidiEnabled() {
     // Map of note identifiers to button actions
     //can be variable sets or function calls.
     const buttonOnActions = {
-      "G#-1": () => sunColor="#FF0000", //1
-      "A-1": () => console.log("button a-1 pressed"), //2
+      "G#-1": () => {
+        sunColor = "#FF0000"; 
+        storeCurrentControllerValues(); // Store values when button is pressed
+      }, //1
+      "A-1": () => {
+        console.log("button a-1 pressed");
+        storeCurrentControllerValues(); // Store values when button is pressed
+      }, //2
       "A#-1": () => noFunc = 1,  //3
       "B-1": () => noFunc = 1,  //4
       "C0": () => noFunc = 1,  //5
@@ -85,6 +95,43 @@ function onMidiEnabled() {
       "A#0": () => noFunc = 1,  //15
       "B0": () => noFunc = 1,  //16 
   };
+
+
+
+  // Function to load stored controller values from localStorage
+  function loadStoredControllerValues() {
+    const storedValues = localStorage.getItem('capturedControllerValues');
+    if (storedValues) {
+      capturedControllerValues = JSON.parse(storedValues);
+      console.log("Loaded stored controller values:", capturedControllerValues);
+      
+      // Set the initial state of the graphs or UI elements
+      setInitialGraphStates(capturedControllerValues);
+    } else {
+      capturedControllerValues = []; // Initialize as empty array if not set
+      console.log("No stored controller values found, initialized as empty array.");
+    }
+  }
+
+  // Function to set the initial state of the graphs or UI elements
+  function setInitialGraphStates(values) {
+    // Assuming you have a function or method to update the graphs
+    // This is a placeholder; replace with actual implementation
+    for (let i = 0; i < values.length; i++) {
+      // Update your graph or UI element with the loaded values
+      // Example: updateGraph(i, values[i]);
+     // console.log(`Setting graph ${i} to value: ${values[i]}`);
+    }
+  }
+
+  // Function to store current controller values
+  function storeCurrentControllerValues() {
+    capturedControllerValues = mappedControllerValues.slice(0, 10).map(value => Math.round(value)); // Capture only the first 10 controller values rounded to no decimal place
+    console.log("First 10 controller values stored:", capturedControllerValues);
+    
+    // Save to localStorage, replacing the previous data
+    localStorage.setItem('capturedControllerValues', JSON.stringify(capturedControllerValues));
+  }
     
       //myMidi.addListener("noteon", onNote);
   

@@ -139,11 +139,7 @@ function setup() {
   // handle any incoming serial data:
   serial.on("data", gotData);
   serial.on("close", makePortButton);
-  
-  // Initialize graphData array
-  for (let i = 0; i < totalInputs; i++) {
-    graphData[i] = [];
-  }
+
 
   // Generate initial sample data
   generateSampleData();
@@ -157,8 +153,22 @@ function setup() {
 // Function to generate sample data
 function generateSampleData() {
   sampleData = [];
-  for (let i = 0; i < 200; i++) { // Generate 100 data points
-    sampleData.push(Array.from({ length: totalInputs }, () => random(0, 100))); // Random values between 0 and 100
+  for (let i = 0; i < 200; i++) { // Generate 200 data points
+    const noisyData = Array.from({ length: totalInputs }, () => {
+      // Introduce sporadic peaks and spikes in the data
+      let baseValue = random(0, 100); // Base value between 0 and 100
+      let noiseOffset = random(-20, 20); // Random noise offset between -20 and 20
+      // Introduce sporadic peaks and spikes
+      if (random(1) < 0.1) { // 10% chance of a peak or spike
+        noiseOffset = random(-50, 50); // Larger noise offset for peaks and spikes
+      }
+      // Create portions with minimum data
+      if (random(1) < 0.3) { // 30% chance of minimum data
+        baseValue = 0; // Set base value to 0 for minimum data
+      }
+      return Math.max(0, Math.min(baseValue + noiseOffset, 100)); // Ensure the value is between 0 and 100
+    });
+    sampleData.push(noisyData);
   }
 }
 
@@ -234,7 +244,7 @@ function draw() {
   fill(255);
   textAlign(LEFT, BOTTOM);
   textSize(14);
-  text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
+  //text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
 }
 
 function drawDebugView() {
@@ -961,6 +971,8 @@ function drawCircularLineGraph() {
   const centerY = height / 2;
   //const startRadius = height * 0.3; // Start point of each sensor data as a circle of size 50% of screen height
   //const maxRadius = height * 0.5; // Max sensor data as a circle at 70% of screen height
+
+  //Allow the start/end radius changeable by the midi controller.
   let startRadius = mappedControllerValues[1]*2.8;
   let maxRadius = mappedControllerValues[2]*3;
 
@@ -972,6 +984,8 @@ function drawCircularLineGraph() {
   for (let i = 0; i < totalInputs; i++) {
     const sensorData = dataToUse.map(data => data[i]); // Get data for the current sensor
     const points = []; // Store points for the line graph
+    //console.log(points);
+    //noLoop();
 
     for (let j = 0; j < sensorData.length; j++) {
       const angle = j * (TWO_PI / sensorData.length); // Calculate angle for each data point
@@ -1001,6 +1015,10 @@ function drawCircularLineGraph() {
     // Connect the last point to the first point to close the circle
     curveVertex(points[0].x, points[0].y); // Connect the last point to the first point with a smooth curve
     endShape(CLOSE); // Ensure the points are joined so it is a continuous graph all the way around the circle
+
+    // Offset for the next graph line
+    startRadius += 10; // Offset the start radius for the next graph line
+    maxRadius += 10; // Offset the max radius for the next graph line
   }
 
 
