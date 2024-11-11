@@ -35,7 +35,7 @@ let splitVal;
 
 let debugMode = true; // Start in debug mode
 let offlineMode = true; // Global variable to track offline mode
-let midiLogRaw = false;
+let midiLogRaw = true;
 let sampleData = []; // Array to hold generated sample data
 
 
@@ -73,7 +73,7 @@ let sunAlpha = 50;
 
 // Add this near the top with other global variables
 let viewMode
-if (offlineMode){viewMode = 6;} else {viewMode = 4;}
+if (offlineMode){viewMode = 6;} else {viewMode = 1;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
 
@@ -235,7 +235,7 @@ function draw() {
     case 5:
       drawWaveformGarden();
       break;
-    case 6: // New case for circular line graph view
+    case 6: 
       drawCircularLineGraph();
       break;
   }
@@ -308,6 +308,9 @@ function drawDebugView() {
   text("Sensor Readings", width / 2, height * 0.05);
 }
 
+// Ensure capturedControllerValues is initialized
+//let capturedControllerValues = []; // Initialize as an empty array
+
 function drawLiveGraphs() {
   const graphHeight = height / 8;
   const graphWidth = width * 0.9;
@@ -331,13 +334,16 @@ function drawLiveGraphs() {
 
     // Draw current value
     textAlign(RIGHT, TOP);
-    text(sensors[i], width - leftMargin, yPos + 5);
+    // Check if capturedControllerValues has enough elements
+    const currentValue = (capturedControllerValues.length > i) ? capturedControllerValues[i] : sensors[i]; // Use stored value if available
+    text(currentValue, width - leftMargin, yPos + 5);
 
     // Add new data point based on updateInterval
     if (frameCounter >= updateInterval) {
       graphData[i].push(sensors[i]);
       if (graphData[i].length > maxDataPoints) {
         graphData[i].shift();
+        
       }
     }
 
@@ -345,24 +351,16 @@ function drawLiveGraphs() {
     stroke(i * 30 % 360, 100, 100);
     noFill();
     beginShape();
+    
+    
     for (let j = 0; j < graphData[i].length; j++) {
       const x = map(j, 0, maxDataPoints - 1, leftMargin, leftMargin + graphWidth);
       const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
       vertex(x, y);
     }
+
     endShape();
   }
-
-  // Reset frame counter
-  if (frameCounter >= updateInterval) {
-    frameCounter = 0;
-  }
-
-  // Display current update interval
-  fill(255);
-  textAlign(LEFT, TOP);
-  textSize(14);
-  text(`Update Interval: ${updateInterval} frames`, 10, height - 30);
 }
 
 function polygon(x, y, radius, npoints) {
@@ -972,14 +970,15 @@ function drawCircularLineGraph() {
   //const startRadius = height * 0.3; // Start point of each sensor data as a circle of size 50% of screen height
   //const maxRadius = height * 0.5; // Max sensor data as a circle at 70% of screen height
 
-  //Allow the start/end radius changeable by the midi controller.
-  let startRadius = mappedControllerValues[1]*2.8;
-  let maxRadius = mappedControllerValues[2]*3;
+  //The starting position of the rings
+  let startRadius = 198//mappedControllerValues[1]*2.8;//200
+  let maxRadius =200//mappedControllerValues[2]*3;//195
 
   const angleStep = TWO_PI / totalInputs; // Angle step for each sensor
 
   // Use either capturedData or sampleData based on offline mode
   const dataToUse = offlineMode ? sampleData : capturedData;
+
 
   for (let i = 0; i < totalInputs; i++) {
     const sensorData = dataToUse.map(data => data[i]); // Get data for the current sensor
@@ -990,7 +989,11 @@ function drawCircularLineGraph() {
     for (let j = 0; j < sensorData.length; j++) {
       const angle = j * (TWO_PI / sensorData.length); // Calculate angle for each data point
       const sensorValue = sensorData[j];
-      const sensorRadius = map(sensorValue, 0, 100, startRadius, maxRadius); // Map sensor value to radius
+
+      //const sensorRadius = (i === 0) ? startRadius : map(sensorValue, 0, 100, mappedControllerValues[1], mappedControllerValues[2]); // Use mapped values for subsequent draws
+
+//Allow the start/end radius changeable by the midi controller.
+      const sensorRadius = map(sensorValue, 0, 100, mappedControllerValues[1]+startRadius, mappedControllerValues[2]+maxRadius); // Map sensor value to radius
 
       // Calculate the position for the sensor's point
       const x = centerX + cos(angle) * sensorRadius;

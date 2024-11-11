@@ -8,14 +8,23 @@ WebMidi
 .catch(err => alert(err));
 */
 
+
+
+
   // New array to store the captured controller values
   let capturedControllerValues = [];
+
+  let currentControllerValues = {};
+
 
 
 //WEBMIDI//
 function onMidiEnabled() {
     console.log("MIDI enabled");
-    loadStoredControllerValues(); // Load stored values on MIDI enable
+          
+    const myMidi = WebMidi.inputs[0];
+    const myMidiOut = WebMidi.outputs[0];
+
       // Display available MIDI input devices
       if (WebMidi.inputs.length < 1)
           console.log("No device detected.");
@@ -23,19 +32,58 @@ function onMidiEnabled() {
           WebMidi.inputs.forEach((device, index) => {
               console.log(`${index}: ${device.name}`);
           });
-      
-    const myMidi = WebMidi.inputs[0];
+
+    // Display available MIDI output devices
+    if (WebMidi.outputs.length < 1) {
+      console.log("No MIDI output device detected.");
+  } else {
+      WebMidi.outputs.forEach((device, index) => {
+          console.log(`${index}: ${device.name}`);
+      });
+  }
+
+
+    if (!myMidiOut) {
+      console.error("MIDI output not found.");
+      return; // Exit if no output is found
+  }
+
+    //console.log("webmidioutput: " + myMidiOut);
+
+    myMidiOut.sendControlChange(1,127,11);
+ 
+   
+// Example usage
+const controllerNumber = 1; // Change this to the correct controller number
+//const valueToSend = Math.round(0.7 * 127); // Convert to MIDI value range (0-127)
+const valueToSend = 127; // Convert to MIDI value range (0-127)
+
+sendControlChange(controllerNumber, valueToSend);
+
+
+    
     // const mySynth = WebMidi.getInputByName("TYPE NAME HERE!")
     // Map of note identifiers to button actions
-    //can be variable sets or function calls.
+    //can be variable sets or function calls.webmidi updating
+
+    loadStoredControllerValues(); // Load stored values on MIDI enable
+    //updateMidiControllerValues(); // Call this function to send updated values
+
+
+
+
     const buttonOnActions = {
       "G#-1": () => {
         sunColor = "#FF0000"; 
-        storeCurrentControllerValues(); // Store values when button is pressed
+        storeCurrentControllerValues(); // Store values when button is pressedo
       }, //1
       "A-1": () => {
         console.log("button a-1 pressed");
+
+        //BUTTON 1 ACTIONS
         storeCurrentControllerValues(); // Store values when button is pressed
+        
+
       }, //2
       "A#-1": () => noFunc = 1,  //3
       "B-1": () => noFunc = 1,  //4
@@ -120,7 +168,7 @@ function onMidiEnabled() {
     for (let i = 0; i < values.length; i++) {
       // Update your graph or UI element with the loaded values
       // Example: updateGraph(i, values[i]);
-     // console.log(`Setting graph ${i} to value: ${values[i]}`);
+      console.log(`Setting graph ${i} to value: ${values[i]}`);
     }
   }
 
@@ -133,18 +181,32 @@ function onMidiEnabled() {
     localStorage.setItem('capturedControllerValues', JSON.stringify(capturedControllerValues));
   }
     
-      //myMidi.addListener("noteon", onNote);
-  
-    // Function to read knob values before using them
-  function readKnobValues() {
-    // Example of how to use the stored knob values
-    for (let i = 0; i < midiKnobValues.length; i++) {
-        if (midiKnobValues[i] !== undefined) {
-            //console.log(`Knob ${i}: ${midiKnobValues[i]}`);
-            savedControllerValues[i] = mappedControllerValues[i];
-        }
-    }
+   
+
+
+/*
+// Function to send MIDI control change messages to the MIDI controller
+function sendMidiControlChange(controllerNumber, value) {
+  //const myMidi = WebMidi.inputs[0]; // Assuming you are using the first MIDI input
+  if (myMidi) {
+    // Send a control change message
+    myMidi.output.sendControlChange(controllerNumber, value);
+    console.log(`Sent control change: Controller ${controllerNumber}, Value ${value}`);
+  } else {
+    console.error("MIDI device not found.");
   }
+}
+
+// Example usage: Update a specific controller value
+function updateMidiControllerValues() {
+  for (let i = 0; i < mappedControllerValues.length; i++) {
+    const value = Math.round(mappedControllerValues[i]); // Round the value if necessary
+    sendMidiControlChange(i, value); // Send the value to the corresponding controller
+  }
+}
+*/
+
+
   
   ///BUTTONS///
     // Listen for note on messages
@@ -166,7 +228,9 @@ function onMidiEnabled() {
       }
   
       //console.log("saved: " + savedControllerValues.map(value => Math.round(value)).join(','));
-      
+      // Example: Send a control change to controller 1 with a value of 100
+   
+    
   });
   
   //KNOBS
@@ -180,11 +244,15 @@ function onMidiEnabled() {
   function onCC(e) {
     if(midiLogRaw){
       console.log(`${e.controller.number} ${e.value}`)
-      console.log(` ${e.controller.number}`);
+      //console.log(` ${e.controller.number}`);
     };
     // Map the controller value for later use
     mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
     savedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
+
+    currentControllerValues[e.controller.number] = e.value;
+    logCurrentControllerValues();
+
 
     if (e.controller.number == 9) {
 
@@ -192,3 +260,33 @@ function onMidiEnabled() {
       //console.log(sunAlpha);
   }
   }
+
+  // Function to log all current controller values
+function logCurrentControllerValues() {
+  console.log("Current Controller Values:");
+  for (const [controllerNumber, value] of Object.entries(currentControllerValues)) {
+      console.log(`Controller ${controllerNumber}: Value ${value}`);
+  }
+}
+
+
+
+function sendControlChange(controllerNumber, value, channel = 11) {
+  const myMidiOut = WebMidi.outputs[0]; // Get the first MIDI output
+
+
+  // Construct the status byte for control change on the specified channel
+  //const channel = 11; // Set to channel 11
+  const statusByte = 0xB0 + (channel - 1); // MIDI channels are 0-indexed in the status byte
+
+  // Send the control change message to set the knob value
+  myMidiOut.send([statusByte, controllerNumber, value]);
+  console.log(`Sent Control Change: Status Byte: ${statusByte.toString(16)}, Controller: ${controllerNumber}, Value: ${value}`);
+
+  // Send LED control change message to light the corresponding LED
+  const ledStatusByte = 0xB0 ;//+ (channel - 1); // Same status byte for LED
+  const ledValue = value > 0 ? 127 : 0; // Set LED to full brightness if value > 0, otherwise off
+  myMidiOut.send([ledStatusByte, controllerNumber + 32, ledValue]); // Add 32 to the controller number for LED
+  console.log(`Sent LED Control Change: Status Byte: ${ledStatusByte.toString(16)}, LED Controller: ${controllerNumber + 32}, Value: ${ledValue}`);
+}
+
