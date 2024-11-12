@@ -33,9 +33,9 @@ let sensor7 = 0;
 let sensors = [];
 let splitVal;
 
-let debugMode = true; // Start in debug mode
+let debugMode = false; // Start in debug mode
 let offlineMode = true; // Global variable to track offline mode
-let midiLogRaw = true;
+let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
 

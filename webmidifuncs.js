@@ -30,7 +30,7 @@ function onMidiEnabled() {
           console.log("No device detected.");
       else
           WebMidi.inputs.forEach((device, index) => {
-              console.log(`${index}: ${device.name}`);
+            if(debugMode){console.log(`${index}: ${device.name}`)};
           });
 
     // Display available MIDI output devices
@@ -38,7 +38,7 @@ function onMidiEnabled() {
       console.log("No MIDI output device detected.");
   } else {
       WebMidi.outputs.forEach((device, index) => {
-          console.log(`${index}: ${device.name}`);
+        if(debugMode){console.log(`${index}: ${device.name}`)};
       });
   }
 
@@ -78,7 +78,7 @@ sendControlChange(controllerNumber, valueToSend);
         storeCurrentControllerValues(); // Store values when button is pressedo
       }, //1
       "A-1": () => {
-        console.log("button a-1 pressed");
+        if(debugMode){console.log("button a-1 pressed")};
 
         //BUTTON 1 ACTIONS
         storeCurrentControllerValues(); // Store values when button is pressed
@@ -151,13 +151,13 @@ sendControlChange(controllerNumber, valueToSend);
     const storedValues = localStorage.getItem('capturedControllerValues');
     if (storedValues) {
       capturedControllerValues = JSON.parse(storedValues);
-      console.log("Loaded stored controller values:", capturedControllerValues);
+      if(debugMode){console.log("Loaded stored controller values:", capturedControllerValues)};
       
       // Set the initial state of the graphs or UI elements
       setInitialGraphStates(capturedControllerValues);
     } else {
       capturedControllerValues = []; // Initialize as empty array if not set
-      console.log("No stored controller values found, initialized as empty array.");
+      if(debugMode){console.log("No stored controller values found, initialized as empty array.")};
     }
   }
 
@@ -168,14 +168,14 @@ sendControlChange(controllerNumber, valueToSend);
     for (let i = 0; i < values.length; i++) {
       // Update your graph or UI element with the loaded values
       // Example: updateGraph(i, values[i]);
-      console.log(`Setting graph ${i} to value: ${values[i]}`);
+      if(debugMode){console.log(`Setting graph ${i} to value: ${values[i]}`)};
     }
   }
 
   // Function to store current controller values
   function storeCurrentControllerValues() {
     capturedControllerValues = mappedControllerValues.slice(0, 10).map(value => Math.round(value)); // Capture only the first 10 controller values rounded to no decimal place
-    console.log("First 10 controller values stored:", capturedControllerValues);
+    if(debugMode){console.log("First 10 controller values stored:", capturedControllerValues)};
     
     // Save to localStorage, replacing the previous data
     localStorage.setItem('capturedControllerValues', JSON.stringify(capturedControllerValues));
@@ -211,7 +211,7 @@ function updateMidiControllerValues() {
   ///BUTTONS///
     // Listen for note on messages
     myMidi.addListener("noteon", e => {
-      console.log(`${e.note.identifier}`);
+      if(debugMode){console.log(`${e.note.identifier}`)};
       //console.log(`${mappedControllerValues[e.controller.number]}`);
       // Check if the note identifier is mapped to an action
       if (buttonOnActions[e.note.identifier]) {
@@ -237,7 +237,7 @@ function updateMidiControllerValues() {
     myMidi.addListener("controlchange", onCC);	
   }
   function onNote(e) {
-      console.log(`${e.controller.number} `);
+    if(debugMode){console.log(`${e.controller.number} `)};
     mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
   }
 
@@ -263,9 +263,9 @@ function updateMidiControllerValues() {
 
   // Function to log all current controller values
 function logCurrentControllerValues() {
-  console.log("Current Controller Values:");
+  if(debugMode){console.log("Current Controller Values:")};
   for (const [controllerNumber, value] of Object.entries(currentControllerValues)) {
-      console.log(`Controller ${controllerNumber}: Value ${value}`);
+    if(debugMode){console.log(`Controller ${controllerNumber}: Value ${value}`)};
   }
 }
 
@@ -281,12 +281,12 @@ function sendControlChange(controllerNumber, value, channel = 11) {
 
   // Send the control change message to set the knob value
   myMidiOut.send([statusByte, controllerNumber, value]);
-  console.log(`Sent Control Change: Status Byte: ${statusByte.toString(16)}, Controller: ${controllerNumber}, Value: ${value}`);
+  if(debugMode){console.log(`Sent Control Change: Status Byte: ${statusByte.toString(16)}, Controller: ${controllerNumber}, Value: ${value}`)};
 
   // Send LED control change message to light the corresponding LED
   const ledStatusByte = 0xB0 ;//+ (channel - 1); // Same status byte for LED
   const ledValue = value > 0 ? 127 : 0; // Set LED to full brightness if value > 0, otherwise off
   myMidiOut.send([ledStatusByte, controllerNumber + 32, ledValue]); // Add 32 to the controller number for LED
-  console.log(`Sent LED Control Change: Status Byte: ${ledStatusByte.toString(16)}, LED Controller: ${controllerNumber + 32}, Value: ${ledValue}`);
+  if(debugMode){console.log(`Sent LED Control Change: Status Byte: ${ledStatusByte.toString(16)}, LED Controller: ${controllerNumber + 32}, Value: ${ledValue}`)};
 }
 
