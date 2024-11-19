@@ -127,7 +127,7 @@ sendControlChange(controllerNumber, valueToSend);
   
   const buttonOffActions = {
     "G#-1": () => sunColor="#FFFF00",
-    "A-1": () => console.log("button a-1 released"),
+    "A-1": () => noFunc = 1,
     "A#-1": () => noFunc = 1,
     "B-1": () => noFunc = 1,  //4
     "C0": () => noFunc = 1,  //5
