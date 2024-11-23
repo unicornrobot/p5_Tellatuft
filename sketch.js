@@ -1011,10 +1011,11 @@ function drawCircularLineGraph() {
   const centerY = height / 2; // Y center of the concentric rings
   const maxRadius = min(width, height) * 0.4; // Maximum radius for the outermost ring
   const ringSpacing = maxRadius / totalSensors; // Equal spacing for each sensor ring
-
+  //blendMode(DIFFERENCE)//INSANE MODE!!!
+  
   for (let i = 0; i < totalSensors; i++) {
     const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
-    const colorHue = map(i, mappedControllerValues[2]*0.1, totalSensors, 0, 360); // Generate a color hue based on the sensor index
+    const colorHue = map(i, 0, mappedControllerValues[2], 0, 360); // Generate a color hue based on the sensor index
     fill(colorHue, 100, 100, mappedControllerValues[9]); // MIDI SLIDER // Set stroke color based on the hue
     //noFill(); // No fill for the line graph
     //console.log(mappedControllerValues[1])
