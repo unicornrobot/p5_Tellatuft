@@ -1005,6 +1005,7 @@ function drawWaveformLegend() {
 
 // New function to draw circular line graphs
 function drawCircularLineGraph() {
+  background(0)
   const totalSensors = sensors.length; // Total number of sensors
   const centerX = width / 2; // X center of the concentric rings
   const centerY = height / 2; // Y center of the concentric rings
@@ -1013,15 +1014,17 @@ function drawCircularLineGraph() {
 
   for (let i = 0; i < totalSensors; i++) {
     const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
-    const colorHue = map(i, 0, totalSensors, 0, 360); // Generate a color hue based on the sensor index
-    stroke(colorHue, 100, 100); // Set stroke color based on the hue
-    noFill(); // No fill for the line graph
+    const colorHue = map(i, mappedControllerValues[2]*0.1, totalSensors, 0, 360); // Generate a color hue based on the sensor index
+    fill(colorHue, 100, 100, mappedControllerValues[9]); // MIDI SLIDER // Set stroke color based on the hue
+    //noFill(); // No fill for the line graph
+    //console.log(mappedControllerValues[1])
+    noStroke();
 
     beginShape(); // Start drawing the line graph
     for (let j = 0; j < capturedData.length; j++) {
       const angle = map(j, 0, capturedData.length, 0, TWO_PI); // Angle for each data point
       // Increase the effect of sensor value on the radius to make differences more prominent
-      const radius = ringSpacing * (i + 1) + map(sensorData[j], 0, maxDataValue, 0, ringSpacing * 9.5); // Radius based on sensor value
+      const radius = ringSpacing * (i + 1) + map(sensorData[j], 0, maxDataValue, 0, ringSpacing * mappedControllerValues[1]*0.1); // Radius based on sensor value
       const x = centerX + cos(angle) * radius; // X position based on angle and radius
       const y = centerY + sin(angle) * radius; // Y position based on angle and radius
       curveVertex(x, y); // Add vertex to the shape
