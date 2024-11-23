@@ -32,8 +32,8 @@ let sensor7 = 0;
 let sensors = [];
 let splitVal;
 
-let debugMode = true; // Start in debug mode
-let offlineMode = true; // Global variable to track offline mode
+let debugMode = false; // Start in debug mode
+let offlineMode = false; // Global variable to track offline mode
 let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
@@ -74,7 +74,7 @@ let sunAlpha = 50;
 let viewMode
 let resultsScreen = 6;
 
-if (offlineMode){viewMode = 6;} else {viewMode = 4;}
+if (offlineMode){viewMode = 6;} else {viewMode = 1;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
 
@@ -349,10 +349,12 @@ function drawLiveGraphs() {
 
     // Add new data point based on updateInterval
     if (frameCounter >= updateInterval) {
+      if (!graphData[i]) {
+        graphData[i] = [];
+      }
       graphData[i].push(sensors[i]);
       if (graphData[i].length > maxDataPoints) {
         graphData[i].shift();
-        
       }
     }
 
@@ -362,10 +364,12 @@ function drawLiveGraphs() {
     beginShape();
     
     
-    for (let j = 0; j < graphData[i].length; j++) {
-      const x = map(j, 0, maxDataPoints - 1, leftMargin, leftMargin + graphWidth);
-      const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
-      vertex(x, y);
+    if (graphData[i] && graphData[i].length) {
+      for (let j = 0; j < graphData[i].length; j++) {
+        const x = map(j, 0, maxDataPoints - 1, leftMargin, leftMargin + graphWidth);
+        const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
+        vertex(x, y);
+      }
     }
 
     endShape();
@@ -1050,10 +1054,9 @@ function drawCircularLineGraph() {
 }
 
 function drawCapturedDataGraphs() {
-  const centerX = width / 2; // Center of the circle
-  const centerY = height / 2; // Center of the circle
   const totalSensors = sensors.length; // Total number of sensors
-  const angleIncrement = TWO_PI / capturedData.length; // Angle increment for each data point
+  const totalRings = capturedData.length; // Total number of rings based on captured data
+  const ringSpacing = width / (totalRings + 1); // Equal spacing for each ring
 
   for (let i = 0; i < totalSensors; i++) {
     const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
@@ -1063,14 +1066,17 @@ function drawCapturedDataGraphs() {
 
     beginShape(); // Start drawing the line graph
     for (let j = 0; j < capturedData.length; j++) {
-      const angle = angleIncrement * j; // Angle for the current data point
-      const radius = map(sensorData[j], 0, 100, 100, 200); // Map sensor value to radius for the graph
-      const x = centerX + cos(angle) * radius; // X position based on angle and radius
-      const y = centerY + sin(angle) * radius; // Y position based on angle and radius
-
-      vertex(x, y); // Create a vertex for the line graph
+      const x = ringSpacing * (j + 1); // X position based on ring index
+      const y = height - map(sensorData[j], 0, 100, height, 0); // Y position based on sensor value, ensuring the graph is vertically spaced
+      if (j === 0) {
+        vertex(x, y); // First vertex
+      } else {
+        curveVertex(x, y); // Smooth curve for the rest of the vertices
+      }
     }
-    endShape(); // End drawing the line graph
+    // Connect the last vertex to the first vertex to close the curve
+    curveVertex(ringSpacing, height - map(sensorData[0], 0, 100, height, 0));
+    endShape(CLOSE); // End drawing the line graph with a closed curve
   }
 }
 
