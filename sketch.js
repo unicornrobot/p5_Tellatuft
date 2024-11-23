@@ -1,4 +1,3 @@
-//WEBSERIAL VERSION (DOES NOT REQUIRE P5.SERALSERVER RUNNING - ONLY WORKS IN CHROME/EDGE)
 
 //CLICK FOR FULLSCREEN TOGGLE
 
@@ -33,8 +32,8 @@ let sensor7 = 0;
 let sensors = [];
 let splitVal;
 
-let debugMode = false; // Start in debug mode
-let offlineMode = false; // Global variable to track offline mode
+let debugMode = true; // Start in debug mode
+let offlineMode = true; // Global variable to track offline mode
 let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
@@ -73,6 +72,8 @@ let sunAlpha = 50;
 
 // Add this near the top with other global variables
 let viewMode
+let resultsScreen = 6;
+
 if (offlineMode){viewMode = 6;} else {viewMode = 4;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
@@ -153,7 +154,7 @@ function setup() {
 // Function to generate sample data
 function generateSampleData() {
   sampleData = [];
-  for (let i = 0; i < 200; i++) { // Generate 200 data points
+  for (let i = 0; i < 50; i++) { // Generate 200 data points
     const noisyData = Array.from({ length: totalInputs }, () => {
       // Introduce sporadic peaks and spikes in the data
       let baseValue = random(0, 100); // Base value between 0 and 100
@@ -172,6 +173,16 @@ function generateSampleData() {
   }
 }
 
+
+function outputCapturedDataLengths() {
+  console.log("Length of Captured Data for Each Sensor:");
+  for (let i = 0; i < sensors.length; i++) {
+    const sensorDataLength = capturedData.map(data => data[i]).length; // Get the length of data for the current sensor
+    console.log(`Sensor ${i}: ${sensorDataLength}`);
+  }
+}
+
+
 // when data is received in the serial buffer
 
 function gotData() {
@@ -181,18 +192,14 @@ function gotData() {
   //console.log(currentString); // print it out
   latestData = currentString; // save it to the global variable
 
-
   //DEBUG
   if(debugMode){console.log(currentString)}
   //seperate values in the array
   let splitVal = splitTokens(currentString, ',');
 
-
   //parse strings into ints. 
   splitVal = int(splitVal);
   //console.log(splitVal);
-
-
   //get the individual values for visualisation
   sensor0 = splitVal[0];
   sensor1 = splitVal[1];
@@ -202,8 +209,6 @@ function gotData() {
   sensor5 = splitVal[5];
   sensor6 = splitVal[6];
   sensor7 = splitVal[7];
-
-
 
   //only push  totalInputs at one a time. 
   sensors = [];
@@ -239,7 +244,8 @@ function draw() {
       drawWaveformGarden();
       break;
     case 6: 
-      drawCircularLineGraph();
+      //drawCircularLineGraph();
+      drawCapturedDataGraphs();
       break;
   }
 
@@ -674,35 +680,45 @@ function drawSummary() {
   } else {
     // Draw the summary viz when the edge is reached
     if (summaryFlower) {
-      viewMode = 6; 
+      viewMode = resultsScreen; 
     }
   }
 }
 
+// This function captures sensor data if any sensor value is greater than 0.
+// It checks each sensor value and if any value is positive, 
+// it adds a copy of the current sensor values to the capturedData array.
 function captureData() {
-  capturedData.push([...sensors]);
-
- 
+  if (sensors.some(sensor => sensor > 0)) {
+    capturedData.push([...sensors]);
+  }
 }
 
 
 
 function calculateSummary() {
   let sums = new Array(sensors.length).fill(0);
+
   for (let data of capturedData) {
-    for (let i = 0; i < data.length; i++) {
-      sums[i] += data[i];
-    }
+
+      for (let i = 0; i < data.length; i++) {
+        sums[i] += data[i]; // Accumulate sums for valid data
+      }
   }
+
+  // Calculate averages only if there are valid data entries
   summaryFlower = sums.map(sum => sum / capturedData.length);
 
 
+  if(debugMode){outputCapturedDataLengths()};
   // Output the final array for each sensor to the console
+  /*
   console.log("Final Captured Data for Each Sensor:");
   for (let i = 0; i < sensors.length; i++) {
     const sensorData = capturedData.map(data => data[i]);
     console.log(`Sensor ${i}:`, sensorData.length);
   }
+  */
   
 }
 
@@ -840,16 +856,20 @@ function drawWaveformGarden() {
   
   // Use either capturedData or sampleData based on offline mode
   const dataToUse = offlineMode ? sampleData : capturedData;
+ 
 
   //dataToUse, startY, distance, and startHue
  // drawDataWaves(dataToUse, yOffset + 100, hillHeight * 2, 90); // Adjust parameters as needed
  // drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
 //console.log(mappedControllerValues.map(value => Math.round(value)).join(','));
 
-let landHeight =300;
-let seaHeight =600;
-   landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
-   seaHeight = map(mappedControllerValues[4], 0, 100, height, 0);
+//ADJUSTING WITH MIDI CONTROLER
+ let  landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
+ let  seaHeight = map(mappedControllerValues[4], 0, 100, height, 0);
+
+
+ landHeight =200;
+ seaHeight =400;
 
  //console.log(mappedControllerValues[3]);
   drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
@@ -900,7 +920,7 @@ function drawCloud(x, y, size) {
 
 
 function drawDataWaves(dataToUse, startY, distance, startHue) {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < sensors.length; i++) {
     const yBase = startY + (i + 1) * distance; // Use the distance parameter for spacing
     const avgSum = dataToUse[i];
     
@@ -983,20 +1003,14 @@ function drawCircularLineGraph() {
   background(0);
   const centerX = width / 2;
   const centerY = height / 2;
-  //const startRadius = height * 0.3; // Start point of each sensor data as a circle of size 50% of screen height
-  //const maxRadius = height * 0.5; // Max sensor data as a circle at 70% of screen height
-
-  // The starting position of the rings
-  let startRadius = 198; // Initial start radius
-  let maxRadius = 200;   // Initial max radius
-
-  const angleStep = TWO_PI / totalInputs; // Angle step for each sensor
+  const totalRings = capturedData.length; // Number of rings based on captured data
+  const ringSpacing = height / (totalRings + 1); // Equal spacing for each ring
 
   // Use either capturedData or sampleData based on offline mode
   const dataToUse = offlineMode ? sampleData : capturedData;
 
-  for (let i = 0; i < totalInputs; i++) {
-    const sensorData = dataToUse.map(data => data[i]); // Get data for the current sensor
+  for (let i = 0; i < totalRings; i++) {
+    const sensorData = dataToUse[i]; // Get data for the current ring
     const points = []; // Store points for the line graph
 
     // Calculate the angle increment based on the length of the sensorData
@@ -1006,8 +1020,8 @@ function drawCircularLineGraph() {
       const angle = j * angleIncrement; // Calculate angle for each data point
       const sensorValue = sensorData[j];
 
-      // Allow the start/end radius changeable by the midi controller
-      const sensorRadius = map(sensorValue*50, 0, 100, mappedControllerValues[1] + startRadius, mappedControllerValues[2] + maxRadius); // Map sensor value to radius
+      // Map sensor value to radius ensuring the graph fits into the available window height
+      const sensorRadius = map(sensorValue, 0, 100, ringSpacing * (i + 1), ringSpacing * (i + 2));
 
       // Calculate the position for the sensor's point
       const x = centerX + cos(angle) * sensorRadius;
@@ -1032,13 +1046,32 @@ function drawCircularLineGraph() {
     // Connect the last point to the first point to close the circle
     curveVertex(points[0].x, points[0].y); // Connect the last point to the first point with a smooth curve
     endShape(CLOSE); // Ensure the points are joined so it is a continuous graph all the way around the circle
-
-    // Offset for the next graph line
-    startRadius += 10; // Offset the start radius for the next graph line
-    maxRadius += 10;   // Offset the max radius for the next graph line
   }
+}
 
+function drawCapturedDataGraphs() {
+  const centerX = width / 2; // Center of the circle
+  const centerY = height / 2; // Center of the circle
+  const totalSensors = sensors.length; // Total number of sensors
+  const angleIncrement = TWO_PI / capturedData.length; // Angle increment for each data point
 
+  for (let i = 0; i < totalSensors; i++) {
+    const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
+    const colorHue = map(i, 0, totalSensors, 0, 360); // Generate a color hue based on the sensor index
+    stroke(colorHue, 100, 100); // Set stroke color based on the hue
+    noFill(); // No fill for the line graph
+
+    beginShape(); // Start drawing the line graph
+    for (let j = 0; j < capturedData.length; j++) {
+      const angle = angleIncrement * j; // Angle for the current data point
+      const radius = map(sensorData[j], 0, 100, 100, 200); // Map sensor value to radius for the graph
+      const x = centerX + cos(angle) * radius; // X position based on angle and radius
+      const y = centerY + sin(angle) * radius; // Y position based on angle and radius
+
+      vertex(x, y); // Create a vertex for the line graph
+    }
+    endShape(); // End drawing the line graph
+  }
 }
 
 
