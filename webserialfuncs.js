@@ -19,11 +19,11 @@ function makePortButton() {
   function openPort() {
     // wait for the serial.open promise to return,
     // then call the initiateSerial function
-    serial.open().then(initiateSerial);
+    serial.open({ baudRate: 9600 }).then(initiateSerial);
    
     // once the port opens, let the user know:
     function initiateSerial() {
-      console.log("port open");
+      console.log("port open at 9600 baud");
     }
     // hide the port button once a port is chosen:
     if (portButton) portButton.hide();

@@ -37,10 +37,12 @@ let offlineMode = false; // Global variable to track offline mode
 let midiLogRaw = false;
 let sampleData = []; // Array to hold generated sample data
 
+let maxDataValue = 360; // the max value the sensor is sending
+
 
 
 let graphData = []; // Array to store historical data for each sensor
-const maxDataPoints = 100; // Maximum number of data points to store for each sensor
+const maxDataPoints = 360; // Maximum number of data points to store for each sensor
 let hillHeight = 30; //value of disatnce between 
 
 let  w=500
@@ -72,11 +74,11 @@ let sunAlpha = 50;
 
 // Add this near the top with other global variables
 let viewMode
-let resultsScreen = 6;
+let resultsScreen = 6;//5 = wavegarden - 6 = circulrgraph
 
-if (offlineMode){viewMode = 6;} else {viewMode = 1;}
+if (offlineMode){viewMode = 6;} else {viewMode = 4;}
 
- // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: scene
+ // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: wavegarden 
 
 let flowerX = 0;
 const flowerColors = [
@@ -244,8 +246,8 @@ function draw() {
       drawWaveformGarden();
       break;
     case 6: 
-      //drawCircularLineGraph();
-      drawCapturedDataGraphs();
+      drawCircularLineGraph();
+      //drawCapturedDataGraphs();
       break;
   }
 
@@ -275,13 +277,13 @@ function drawDebugView() {
     fill(255);
     noStroke();
     textAlign(RIGHT, CENTER);
-    text(i * 10, width * 0.05, y);
+    text(i * maxDataValue/10, width * 0.05, y);
   }
   
   // Plot the sensor data
   for (let i = 0; i < totalInputs; i++) {
     let x = map(i, 0, totalInputs - 1, width * 0.1, width * 0.9);
-    let y = map(sensors[i], 0, 100, graphY + graphHeight, graphY);
+    let y = map(sensors[i], 0, maxDataValue, graphY + graphHeight, graphY);
     
     // Draw vertical lines for each sensor
     stroke(255, 50);
@@ -304,7 +306,7 @@ function drawDebugView() {
     // Draw lines connecting the points
     if (i > 0) {
       let prevX = map(i - 1, 0, totalInputs - 1, width * 0.1, width * 0.9);
-      let prevY = map(sensors[i - 1], 0, 100, graphY + graphHeight, graphY);
+      let prevY = map(sensors[i - 1], 0, maxDataValue, graphY + graphHeight, graphY);
       stroke(255, 100);
       line(prevX, prevY, x, y);
     }
@@ -481,7 +483,7 @@ function keyPressed() {
     debugMode = !debugMode;
   }
   if (key === 'v' || key === 'V') {
-    viewMode = (viewMode + 1) % 6; // Now cycles through 6 views
+    viewMode = (viewMode + 1) % 7; // Now cycles through 6 views
     if (viewMode === 4) {
       // Reset capture for summary flower view
       capturedData = [];
@@ -685,10 +687,12 @@ function drawSummary() {
     // Draw the summary viz when the edge is reached
     if (summaryFlower) {
       viewMode = resultsScreen; 
+      console.log('finished');
+      
     }
   }
 }
-
+/*
 // This function captures sensor data if any sensor value is greater than 0.
 // It checks each sensor value and if any value is positive, 
 // it adds a copy of the current sensor values to the capturedData array.
@@ -696,6 +700,29 @@ function captureData() {
   if (sensors.some(sensor => sensor > 0)) {
     capturedData.push([...sensors]);
   }
+}*/let lastCapturedData = []; // Array to store the last captured sensor values
+
+function captureData() {
+  // Check if any sensor value is greater than 0
+  if (sensors.some(sensor => sensor > 0)) {
+    // Create a copy of the current sensor values
+    const currentData = [...sensors];
+
+    // Check if the current data is different from the last captured data
+    if (!arraysEqual(currentData, lastCapturedData)) {
+      capturedData.push(currentData); // Add to captured data
+      lastCapturedData = currentData; // Update last captured data
+    }
+  }
+}
+
+// Helper function to compare two arrays for equality
+function arraysEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) return false; // Check length
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) return false; // Check each element
+  }
+  return true; // Arrays are equal
 }
 
 
@@ -704,7 +731,7 @@ function calculateSummary() {
   let sums = new Array(sensors.length).fill(0);
 
   for (let data of capturedData) {
-
+      //console.log(data.join(", ")); // Output the entire captured data for 1 sensor as a single string
       for (let i = 0; i < data.length; i++) {
         sums[i] += data[i]; // Accumulate sums for valid data
       }
@@ -845,13 +872,8 @@ function drawWaveformGarden() {
   if (waveHeight === undefined) {
     waveHeight = height / 20; // Fallback definition if not set
   }
-
   //colorMode(HSB, 360, 100, 100, 100);
   background(200, 30, 95); // Light blue sky
-  
-  //const hillHeight = height / 30; // width between the hills
-  const treeBaseSize = 10;
-  //const yOffset = 100; // Vertical offset for waves
   
   // Draw sun
   fill(60,100,100,sunAlpha);
@@ -860,12 +882,6 @@ function drawWaveformGarden() {
   
   // Use either capturedData or sampleData based on offline mode
   const dataToUse = offlineMode ? sampleData : capturedData;
- 
-
-  //dataToUse, startY, distance, and startHue
- // drawDataWaves(dataToUse, yOffset + 100, hillHeight * 2, 90); // Adjust parameters as needed
- // drawDataWaves(dataToUse, yOffset + 400, hillHeight * 2, 200);
-//console.log(mappedControllerValues.map(value => Math.round(value)).join(','));
 
 //ADJUSTING WITH MIDI CONTROLER
  let  landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
@@ -879,23 +895,6 @@ function drawWaveformGarden() {
   drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
   drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2], 200);
 
-  
-
-/*
-  // Draw clouds based on all captured sensor data
-  for (let i = 0; i < dataToUse.length; i++) {
-    const sensorData = dataToUse[i];
-    const total = sensorData.reduce((acc, curr) => acc + curr, 0); 
-    const avgSum = total / sensorData.length;
-    
-    const cloudX = map(i, 0, dataToUse.length - 1, width * 0.1, width * 0.9);
-    const cloudY = height * 0.25; // Position clouds at the top 25% of the screen
-    const cloudSize = map(i, 0, 100, i+20, 50); // Size based on sensor value
-    
-    drawCloud(cloudX, cloudY, cloudSize);
-  //}
-}
-  */
 }
 ///FUNCTIONS//
 
@@ -950,11 +949,13 @@ function drawDataWaves(dataToUse, startY, distance, startHue) {
       
       curveVertex(x, y);
       
-      /*// Draw tree (but not on every iteration to reduce density)
+      // Draw tree (but not on every iteration to reduce density)
+      /*
       if (x % 60 == 0 && x > 0) {
         drawTree(prevX + (x - prevX) / 2, (prevY + y) / 2, map(value, 0, 100, treeBaseSize, treeBaseSize * 3), hillsHue);
       }
-      */
+        */
+      
       prevX = x;
       prevY = y;
     }
@@ -1004,52 +1005,28 @@ function drawWaveformLegend() {
 
 // New function to draw circular line graphs
 function drawCircularLineGraph() {
-  background(0);
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const totalRings = capturedData.length; // Number of rings based on captured data
-  const ringSpacing = height / (totalRings + 1); // Equal spacing for each ring
+  const totalSensors = sensors.length; // Total number of sensors
+  const centerX = width / 2; // X center of the concentric rings
+  const centerY = height / 2; // Y center of the concentric rings
+  const maxRadius = min(width, height) * 0.4; // Maximum radius for the outermost ring
+  const ringSpacing = maxRadius / totalSensors; // Equal spacing for each sensor ring
 
-  // Use either capturedData or sampleData based on offline mode
-  const dataToUse = offlineMode ? sampleData : capturedData;
+  for (let i = 0; i < totalSensors; i++) {
+    const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
+    const colorHue = map(i, 0, totalSensors, 0, 360); // Generate a color hue based on the sensor index
+    stroke(colorHue, 100, 100); // Set stroke color based on the hue
+    noFill(); // No fill for the line graph
 
-  for (let i = 0; i < totalRings; i++) {
-    const sensorData = dataToUse[i]; // Get data for the current ring
-    const points = []; // Store points for the line graph
-
-    // Calculate the angle increment based on the length of the sensorData
-    const angleIncrement = TWO_PI / sensorData.length;
-
-    for (let j = 0; j < sensorData.length; j++) {
-      const angle = j * angleIncrement; // Calculate angle for each data point
-      const sensorValue = sensorData[j];
-
-      // Map sensor value to radius ensuring the graph fits into the available window height
-      const sensorRadius = map(sensorValue, 0, 100, ringSpacing * (i + 1), ringSpacing * (i + 2));
-
-      // Calculate the position for the sensor's point
-      const x = centerX + cos(angle) * sensorRadius;
-      const y = centerY + sin(angle) * sensorRadius;
-
-      points.push({ x, y }); // Store the point
+    beginShape(); // Start drawing the line graph
+    for (let j = 0; j < capturedData.length; j++) {
+      const angle = map(j, 0, capturedData.length, 0, TWO_PI); // Angle for each data point
+      // Increase the effect of sensor value on the radius to make differences more prominent
+      const radius = ringSpacing * (i + 1) + map(sensorData[j], 0, maxDataValue, 0, ringSpacing * 9.5); // Radius based on sensor value
+      const x = centerX + cos(angle) * radius; // X position based on angle and radius
+      const y = centerY + sin(angle) * radius; // Y position based on angle and radius
+      curveVertex(x, y); // Add vertex to the shape
     }
-
-    // Smooth out the graph lines by using curveVertex instead of vertex and connect the first and last values with a line
-    stroke(colors[i % colors.length]);
-    strokeWeight(2);
-    noFill();
-    beginShape();
-    for (let j = 0; j < points.length; j++) {
-      const point = points[j];
-      if (j === 0) {
-        vertex(point.x, point.y); // First point
-      } else {
-        curveVertex(point.x, point.y); // Smooth curve for the rest of the points
-      }
-    }
-    // Connect the last point to the first point to close the circle
-    curveVertex(points[0].x, points[0].y); // Connect the last point to the first point with a smooth curve
-    endShape(CLOSE); // Ensure the points are joined so it is a continuous graph all the way around the circle
+    endShape(CLOSE); // End drawing the line graph with a closed shape
   }
 }
 
