@@ -356,7 +356,7 @@ function drawLiveGraphs() {
         graphData[i] = [];
       }
       graphData[i].push(sensors[i]);
-      if (graphData[i].length > maxDataPoints) {
+      if (graphData[i].length > maxDataValue) {
         graphData[i].shift();
       }
     }
@@ -369,7 +369,7 @@ function drawLiveGraphs() {
     
     if (graphData[i] && graphData[i].length) {
       for (let j = 0; j < graphData[i].length; j++) {
-        const x = map(j, 0, maxDataPoints - 1, leftMargin, leftMargin + graphWidth);
+        const x = map(j, 0, maxDataValue - 1, leftMargin, leftMargin + graphWidth);
         const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
         vertex(x, y);
       }
