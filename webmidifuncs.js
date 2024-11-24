@@ -75,7 +75,8 @@ sendControlChange(controllerNumber, valueToSend);
     const buttonOnActions = {
       "G#-1": () => {
         sunColor = "#FF0000"; 
-        storeCurrentControllerValues(); // Store values when button is pressedo
+        storeCurrentControllerValues(); // Store values when button is pressed
+        viewMode = 5
       }, //1
       "A-1": () => {
         if(debugMode){console.log("button a-1 pressed")};
@@ -85,7 +86,7 @@ sendControlChange(controllerNumber, valueToSend);
         
 
       }, //2
-      "A#-1": () => noFunc = 1,  //3
+      "A#-1": () => changBlendMode(),  //3
       "B-1": () => noFunc = 1,  //4
       "C0": () => noFunc = 1,  //5
       "C#0": () => noFunc = 1,  //6
@@ -238,7 +239,7 @@ function updateMidiControllerValues() {
   }
   function onNote(e) {
     if(debugMode){console.log(`${e.controller.number} `)};
-    mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
+    mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, maxDataValue);
   }
 
   function onCC(e) {
@@ -247,8 +248,8 @@ function updateMidiControllerValues() {
       //console.log(` ${e.controller.number}`);
     };
     // Map the controller value for later use
-    mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
-    savedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, 100);
+    mappedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, maxDataValue);
+    savedControllerValues[e.controller.number] = map(e.value, 0, 1, 0, maxDataValue);
 
     currentControllerValues[e.controller.number] = e.value;
     logCurrentControllerValues();

@@ -42,7 +42,7 @@ let maxDataValue = 360; // the max value the sensor is sending
 
 
 let graphData = []; // Array to store historical data for each sensor
-const maxDataPoints = 360; // Maximum number of data points to store for each sensor
+//const maxDataPoints = 360; // Maximum number of data points to store for each sensor
 let hillHeight = 30; //value of disatnce between 
 
 let  w=500
@@ -69,6 +69,7 @@ let colors = ["#F94144", "#F65A38", "#F3722C",
 
 let sunColor;
 let sunAlpha = 50;
+
 
 //
 
@@ -475,6 +476,12 @@ function windowResized() {
 }
 
 function keyPressed() {
+
+  if (key === 'b' || key === 'B') {
+    currentBlendModeIndex = (currentBlendModeIndex + 1) % blendModes.length;
+    blendMode(blendModes[currentBlendModeIndex]);
+    console.log("Current Blend Mode: " + blendModes[currentBlendModeIndex]);
+  }
   if (key == "p") {
     //console.log("Ports!");
     serial.requestPort();
@@ -1011,12 +1018,16 @@ function drawCircularLineGraph() {
   const centerY = height / 2; // Y center of the concentric rings
   const maxRadius = min(width, height) * 0.4; // Maximum radius for the outermost ring
   const ringSpacing = maxRadius / totalSensors; // Equal spacing for each sensor ring
-  //blendMode(DIFFERENCE)//INSANE MODE!!!
+  //BLEND MODES
+
+blendMode(BLEND)
+
   
   for (let i = 0; i < totalSensors; i++) {
     const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
-    const colorHue = map(i, 0, mappedControllerValues[2], 0, 360); // Generate a color hue based on the sensor index
-    fill(colorHue, 100, 100, mappedControllerValues[9]); // MIDI SLIDER // Set stroke color based on the hue
+    const colorHue = mappedControllerValues[2];
+    const alpha = map(mappedControllerValues[9],0,360,0,100);// Generate a color hue based on the sensor index
+    fill(colorHue, 100, 100, alpha); // MIDI SLIDER // Set stroke color based on the hue
     //noFill(); // No fill for the line graph
     //console.log(mappedControllerValues[1])
     noStroke();
