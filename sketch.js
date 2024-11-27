@@ -70,7 +70,7 @@ let colors = ["#F94144", "#F65A38", "#F3722C",
 let sunColor;
 let sunAlpha = 50;
 
-
+let toggleOutline = true;
 //
 
 // Add this near the top with other global variables
@@ -93,9 +93,6 @@ let previousViewMode = 0;
 let capturedData = [];
 let isCapturing = true;
 let summaryFlower = null;
-
-
-
 let waveHeight; // Declare waveHeight as a global variable
 
 function setup() {
@@ -176,14 +173,6 @@ function generateSampleData() {
   }
 }
 
-
-function outputCapturedDataLengths() {
-  console.log("Length of Captured Data for Each Sensor:");
-  for (let i = 0; i < sensors.length; i++) {
-    const sensorDataLength = capturedData.map(data => data[i]).length; // Get the length of data for the current sensor
-    console.log(`Sensor ${i}: ${sensorDataLength}`);
-  }
-}
 
 
 // when data is received in the serial buffer
@@ -715,11 +704,13 @@ function captureData() {
     // Create a copy of the current sensor values
     const currentData = [...sensors];
 
+    //  NOISE REDUCTION
     // Check if the current data is different from the last captured data
     if (!arraysEqual(currentData, lastCapturedData)) {
       capturedData.push(currentData); // Add to captured data
       lastCapturedData = currentData; // Update last captured data
     }
+      //
   }
 }
 
@@ -1010,8 +1001,11 @@ function drawWaveformLegend() {
   text("Trees: Data points", legendX, legendY + 60);
 }
 
+let runOnce = false;
+
 // New function to draw circular line graphs
 function drawCircularLineGraph() {
+
   background(0)
   const totalSensors = sensors.length; // Total number of sensors
   const centerX = width / 2; // X center of the concentric rings
@@ -1022,15 +1016,32 @@ function drawCircularLineGraph() {
 
 blendMode(BLEND)
 
-  
+  //DRAW THE SHAPE
   for (let i = 0; i < totalSensors; i++) {
     const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
-    const colorHue = mappedControllerValues[2];
-    const alpha = map(mappedControllerValues[9],0,360,0,100);// Generate a color hue based on the sensor index
-    fill(colorHue, 100, 100, alpha); // MIDI SLIDER // Set stroke color based on the hue
-    //noFill(); // No fill for the line graph
-    //console.log(mappedControllerValues[1])
-    noStroke();
+    const sensorDataString = sensorData.join(', '); // Convert array to string
+    const averageValue = round(sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length); // Calculate average
+   
+    //debug the data
+  if(debugMode){
+    if(!runOnce){
+    console.log(`Sensor ${i} Data: [${sensorDataString}]`); // Log the array contents
+    console.log(`Sensor ${i} Length: ${sensorData.length}`); // Log the array length  
+    console.log(`Sensor ${i} Average: ${averageValue}`); // Log the average value
+  }}
+    
+    
+    const colorHue = map(mappedControllerValues[2], 0, maxDataValue, 0, 360); // Set hue based on average value
+    const alpha = map(mappedControllerValues[9], 0, 360, 0, 100); // Alpha value
+    //fill(averageValue, 100, 100, alpha); // Fill color based on average hue
+    if(!toggleOutline){
+     fill(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
+      noStroke();
+    }else{
+      strokeWeight(map(mappedControllerValues[3],0,360,1,20))
+      stroke(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
+      noFill();
+    }
 
     beginShape(); // Start drawing the line graph
     for (let j = 0; j < capturedData.length; j++) {
@@ -1043,6 +1054,7 @@ blendMode(BLEND)
     }
     endShape(CLOSE); // End drawing the line graph with a closed shape
   }
+  runOnce = true;
 }
 
 function drawCapturedDataGraphs() {
