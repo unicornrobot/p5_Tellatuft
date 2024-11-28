@@ -174,6 +174,14 @@ function generateSampleData() {
 }
 
 
+// Function to save captured data and mapped controller values to local storage
+function saveDataToLocalStorage() {
+  localStorage.setItem('capturedData', JSON.stringify(capturedData));
+  localStorage.setItem('mappedControllerValues', JSON.stringify(mappedControllerValues));
+  console.log("Data saved to local storage.");
+}
+
+
 
 // when data is received in the serial buffer
 
@@ -466,6 +474,10 @@ function windowResized() {
 
 function keyPressed() {
 
+  if (key === 's' || key === 'S') { // Press 'S' to save data
+    saveDataToLocalStorage();
+  }
+
   if (key === 'b' || key === 'B') {
     currentBlendModeIndex = (currentBlendModeIndex + 1) % blendModes.length;
     blendMode(blendModes[currentBlendModeIndex]);
@@ -592,8 +604,8 @@ function drawFlowerGarden() {
 function drawFlower(sensorIndex) {
   const sensorValue = sensors[sensorIndex];
   const minStemHeight = 50;
-  const maxStemHeight = height-100;
-  const stemHeight = map(sensorValue, 0, 100, minStemHeight, maxStemHeight);
+  const maxStemHeight = height-300;
+  const stemHeight = map(sensorValue, 0, 360, minStemHeight, maxStemHeight);
   const flowerSize = 30; // Fixed flower size
   const y = height - stemHeight;
   const baseAlpha = 20; // Base transparency value for stems
