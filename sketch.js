@@ -39,6 +39,7 @@ let sampleData = []; // Array to hold generated sample data
 
 let maxDataValue = 360; // the max value the sensor is sending
 
+let displayInfo = false;
 
 
 let graphData = []; // Array to store historical data for each sensor
@@ -478,6 +479,12 @@ function keyPressed() {
     saveDataToLocalStorage();
   }
 
+  if (key === 'i' || key === 'I') { // Press 'S' to save data
+    displayInfo = !displayInfo;
+    }
+
+  
+
   if (key === 'b' || key === 'B') {
     currentBlendModeIndex = (currentBlendModeIndex + 1) % blendModes.length;
     blendMode(blendModes[currentBlendModeIndex]);
@@ -583,9 +590,11 @@ function drawGeometricAnimations() {
 
 let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
+let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
 
 function drawWeave() {
-  const boxHeight = 1; // Fixed height for each box
+  
+  const boxHeight = map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
 
@@ -597,7 +606,7 @@ function drawWeave() {
 
     // Draw the box
     noStroke();
-    fill(sensorValue, 100, 100,50); // Color based on sensor value
+    fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
 
     // Draw the mirrored box on the x-axis
@@ -607,13 +616,37 @@ function drawWeave() {
     currentX += boxWidth;
   }
 
-  // Increment the offset for the next set of sensor data
-  weaveOffset += height / 2; // Move horizontally for the next line of boxes
 
-  // If the weaveOffset exceeds the width, reset it and move up vertically
-  if (weaveOffset > width) {
+
+    if (debugMode) {
+      fill(0, 0, 0, 150); // Semi-transparent black background
+      noStroke();
+      //rect(width-130, height - 70, 120, 80); // Draw a rectangle behind the text
+
+      fill(255);
+      textSize(12);
+      textAlign(LEFT, TOP);
+     // console.log(`thread width: ${round(boxHeight)}`, width-120, height - 60);
+      //console.log(`weave speed: ${round(mappedControllerValues[2])}`, width-120, height - 40);
+      //console.log(`brightness: ${round(mappedControllerValues[3])}`, width-120, height - 20);
+      console.log(`thread width: ${round(boxHeight)}`);
+      console.log(`weave speed: ${round(mappedControllerValues[2])}`);
+      console.log(`brightness: ${round(mappedControllerValues[3])}`);
+    }
+
+
+  // Increment the offset for the next set of sensor data
+  weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 0); // speed of drawing - 0=fast  10=good
+
+  // If the weaveOffset exceeds the height, reset it and move up vertically
+  if (weaveOffset > height) {
     weaveOffset = 0;
     verticalOffset += boxHeight; // Move up for the next iteration without gap
+
+    // If verticalOffset exceeds the screen height, reset it based on the setting
+    if (verticalOffset > height) {
+      verticalOffset = resetToBottom ? 0 : height - boxHeight;
+    }
   }
 }
 
@@ -718,6 +751,7 @@ function hexAlpha(alpha) {
 
 function resetView() {
   background(0, 0, 32); // Clear the background
+  background(0,50,50); //dull red/brown
   flowerX = 0; // Reset flower position for the garden view
   // Add any other reset operations here if needed for other views
 }

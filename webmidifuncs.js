@@ -73,26 +73,27 @@ sendControlChange(controllerNumber, valueToSend);
 
 
     const buttonOnActions = {
-      "G#-1": () => {
-        sunColor = "#FF0000"; 
+      "G#-1": () => { //Button 1
+         
         storeCurrentControllerValues(); // Store values when button is pressed
-        viewMode = 5
+        //viewMode = 5
       }, //1
-      "A-1": () => {
-        if(debugMode){console.log("button a-1 pressed")};
-
-        //BUTTON 1 ACTIONS
-        storeCurrentControllerValues(); // Store values when button is pressed
+      "A-1": () => { //Button 2
+        background(0,50,50); //dull red/brown
+        verticalOffset = true; //resets the yposition in the drawWeave function
         
 
-      }, //2
-      "A#-1": () => toggleOutline = false,  //3
+      }, 
+      "A#-1": () => { //button 3
+        saveCanvas('weave_' + Date.now(), 'png');
+        toggleOutline = false;
+      },  
       "B-1": () => noFunc = 1,  //4
       "C0": () => noFunc = 1,  //5
       "C#0": () => noFunc = 1,  //6
       "D0": () => noFunc = 1,  //7
       "D#0": () => noFunc = 1,  //8
-      "E0": () => noFunc = 1,  //9
+      "E0": () => debugMode ,  //9
       "F0": () => noFunc = 1,  //10
       "F#0": () => noFunc = 1,  //11
       "G0": () => noFunc = 1,  //12
