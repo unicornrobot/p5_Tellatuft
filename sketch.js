@@ -580,6 +580,49 @@ function drawGeometricAnimations() {
   }
 }
 
+
+let weaveOffset = 0; // Initialize a variable to track the horizontal offset
+let verticalOffset = 0; // Initialize a variable to track the vertical offset
+
+function drawWeave() {
+  const boxHeight = 1; // Fixed height for each box
+  const centerX = width / 2; // Center of the screen
+  const startY = height; // Start from the bottom of the screen
+
+  let currentX = 0; // Initialize the starting x position
+
+  for (let i = 0; i < sensors.length; i++) {
+    const sensorValue = sensors[i];
+    const boxWidth = map(sensorValue, 0, 100, 0, width / 2); // Map sensor value to box width
+
+    // Draw the box
+    noStroke();
+    fill(sensorValue, 100, 100,50); // Color based on sensor value
+    rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+
+    // Draw the mirrored box on the x-axis
+    rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
+
+    // Increment the x position for the next box
+    currentX += boxWidth;
+  }
+
+  // Increment the offset for the next set of sensor data
+  weaveOffset += height / 2; // Move horizontally for the next line of boxes
+
+  // If the weaveOffset exceeds the width, reset it and move up vertically
+  if (weaveOffset > width) {
+    weaveOffset = 0;
+    verticalOffset += boxHeight; // Move up for the next iteration without gap
+  }
+}
+
+
+
+
+
+
+
 function drawFlowerGarden() {
   // Clear background only when starting a new row
   if (flowerX === 0) {
@@ -683,7 +726,8 @@ function drawSummary() {
 
   if (isCapturing) {
     // Continue drawing the flower garden and capturing data
-    drawFlowerGarden();
+    //drawFlowerGarden();
+    drawWeave();
     captureData();
     
     // Check if we've reached the end of the screen
