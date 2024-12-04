@@ -599,6 +599,16 @@ function drawWeave() {
   const startY = height; // Start from the bottom of the screen
 
   let currentX = 0; // Initialize the starting x position
+  let colors =[]
+  colors[0] = [190.43,94.52,14.31]
+  colors[1] = [166.42,39.26,26.47]
+  colors[2] = [50.09,80.74,73.53]
+  colors[3] = [30.9,96.53,66.08]
+  colors[4] = [23.41,84.26,57.65]
+  colors[5] = [248.32,45.7,43.33]
+  colors[6] = [272.43,25.17,28.82]
+  colors[7] = [325.45,42.86,54.71]
+
 
   for (let i = 0; i < sensors.length; i++) {
     const sensorValue = sensors[i];
@@ -606,9 +616,18 @@ function drawWeave() {
 
     // Draw the box
     noStroke();
-    fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
-    rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+    //HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
+    //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+   
+    //HUE MAPPED TO KNOB 4 - SAT AND BRI 
+    //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 10, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
+    
 
+    //HUE PICKED FROM A SELECTED PALETTE
+    fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
+   
+   //draw the boxes
+    rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     // Draw the mirrored box on the x-axis
     rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
 
