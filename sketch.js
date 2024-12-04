@@ -599,6 +599,7 @@ function drawWeave() {
   const startY = height; // Start from the bottom of the screen
 
   let currentX = 0; // Initialize the starting x position
+
   let colors =[]
   colors[0] = [190.43,94.52,14.31]
   colors[1] = [166.42,39.26,26.47]
@@ -616,13 +617,12 @@ function drawWeave() {
 
     // Draw the box
     noStroke();
-    //HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
+    //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
     //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
    
-    //HUE MAPPED TO KNOB 4 - SAT AND BRI 
-    //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 10, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
+    //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
+    //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
     
-
     //HUE PICKED FROM A SELECTED PALETTE
     fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
    
