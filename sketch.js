@@ -1,7 +1,6 @@
 
 //CLICK FOR FULLSCREEN TOGGLE
 
-
 // serial communication between a microcontroller with 8 sensor values
 
 let serial; // variable for the serial object
@@ -19,16 +18,6 @@ let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 let midiKnobValues = []; // Array to store MIDI knob values
 
 
-
-let sensor0 = 0;
-let sensor1 = 0;
-let sensor2 = 0;
-let sensor3 = 0;
-let sensor4 = 0;
-let sensor5 = 0;
-let sensor6 = 0;
-let sensor7 = 0;
-
 let sensors = [];
 let splitVal;
 
@@ -41,6 +30,7 @@ let maxDataValue = 360; // the max value the sensor is sending
 
 let displayInfo = false;
 
+//var scribble = new Scribble();
 
 let graphData = []; // Array to store historical data for each sensor
 //const maxDataPoints = 360; // Maximum number of data points to store for each sensor
@@ -62,11 +52,11 @@ let time = 0
 let vel = NaN // TWO_PI / 300 assigned in setup()
 let hori_count= 14
 let vert_count = 7
-let colors = ["#F94144", "#F65A38", "#F3722C",
+/*let colors = ["#F94144", "#F65A38", "#F3722C",
               "#F68425", "#F8961E", "#F9AF37",
               "#F9C74F", "#C5C35E", "#90BE6D",
               "#6AB47C", "#43AA8B", "#4D908E",
-              "#52838F", "#577590"]
+              "#52838F", "#577590"]*/
 
 let sunColor;
 let sunAlpha = 50;
@@ -76,9 +66,11 @@ let toggleOutline = true;
 
 // Add this near the top with other global variables
 let viewMode
-let resultsScreen = 6;//5 = wavegarden - 6 = circulrgraph
+let startScreen = 4; // 4 is weave drawing
+let resultsScreen = 6;// (used if captureMode = fixed/continous) 5 = wavegarden - 6 = circulrgraph
 
-if (offlineMode){viewMode = 6;} else {viewMode = 4;}
+
+if (offlineMode){viewMode = 5;} else {viewMode = startScreen;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: wavegarden 
 
@@ -93,7 +85,7 @@ let previousViewMode = 0;
 // Add these new variables
 let capturedData = [];
 let isCapturing = true;
-let summaryFlower = null;
+let summaryData = 0;
 let waveHeight; // Declare waveHeight as a global variable
 
 function setup() {
@@ -112,6 +104,7 @@ function setup() {
   
   
   createCanvas(windowWidth, windowHeight);
+
 
   sunColor = color(60, 100, 100, 10);
    
@@ -182,8 +175,6 @@ function saveDataToLocalStorage() {
   console.log("Data saved to local storage.");
 }
 
-
-
 // when data is received in the serial buffer
 
 function gotData() {
@@ -200,16 +191,6 @@ function gotData() {
 
   //parse strings into ints. 
   splitVal = int(splitVal);
-  //console.log(splitVal);
-  //get the individual values for visualisation
-  sensor0 = splitVal[0];
-  sensor1 = splitVal[1];
-  sensor2 = splitVal[2];
-  sensor3 = splitVal[3];
-  sensor4 = splitVal[4];
-  sensor5 = splitVal[5];
-  sensor6 = splitVal[6];
-  sensor7 = splitVal[7];
 
   //only push  totalInputs at one a time. 
   sensors = [];
@@ -247,6 +228,9 @@ function draw() {
     case 6: 
       drawCircularLineGraph();
       //drawCapturedDataGraphs();
+      break;
+    case 7:
+      drawPaletteSelection();
       break;
   }
 
@@ -388,77 +372,6 @@ function polygon(x, y, radius, npoints) {
   endShape(CLOSE);
 }
 {w-=0.009}//speed
-  
-
-function drawWave(waveHeight,colR,colG,colB, sensorData){
-    //background(255)
-  let x = frameCount*0.5;
-  let y = 10 * sin(x * 0.5);
-  //point(x, y);
-  fill(colR,colG,colB)
-  ellipse(x,y+sensorData,10,10)
-  
-}
-
-
-// if there's no port selected, 
-// make a port select button appear:
-function makePortButton() {
-  // create and position a port chooser button:
-  portButton = createButton("choose port");
-  portButton.position(10, 10);
-  // give the port button a mousepressed handler:
-  portButton.mousePressed(choosePort);
-}
- 
-// make the port selector window appear:
-function choosePort() {
-  if (portButton) portButton.show();
-  serial.requestPort();
-}
- 
-// open the selected port, and make the port 
-// button invisible:
-function openPort() {
-  // wait for the serial.open promise to return,
-  // then call the initiateSerial function
-  serial.open().then(initiateSerial);
- 
-  // once the port opens, let the user know:
-  function initiateSerial() {
-    console.log("port open");
-  }
-  // hide the port button once a port is chosen:
-  if (portButton) portButton.hide();
-}
- 
-// pop up an alert if there's a port error:
-function portError(err) {
-  alert("Serial port error: " + err);
-}
-// read any incoming data as a string
-// (assumes a newline at the end of it):
-function serialEvent() {
-  inData = Number(serial.read());
-  console.log(inData);
-}
- 
-// try to connect if a new serial port 
-// gets added (i.e. plugged in via USB):
-function portConnect() {
-  console.log("port connected");
-  serial.getPorts();
-}
- 
-// if a port is disconnected:
-function portDisconnect() {
-  serial.close();
-  console.log("port disconnected");
-}
- 
-function closePort() {
-  serial.close();
-}
 
 
 ///FULLSCREEN CODE
@@ -587,6 +500,62 @@ function drawGeometricAnimations() {
   }
 }
 
+function drawWave(waveHeight,colR,colG,colB, sensorData){
+  //background(255)
+let x = frameCount*0.5;
+let y = 10 * sin(x * 0.5);
+//point(x, y);
+fill(colR,colG,colB)
+ellipse(x,y+sensorData,10,10)
+
+}
+
+//////////////////////
+//////DRAW WEAVE/////
+////////////////////
+
+
+let palettes = [
+   /* Name */[[0, 100, 100], [45, 100, 100], [90, 100, 100], [135, 100, 100], [180, 100, 100], [225, 100, 100], [270, 100, 100], [315, 100, 100]],
+   /* Name */[[30, 100, 100], [60, 100, 100], [90, 100, 100], [120, 100, 100], [150, 100, 100], [180, 100, 100], [210, 100, 100], [240, 100, 100]],
+   /* Name */[[15, 100, 100], [75, 100, 100], [135, 100, 100], [195, 100, 100], [255, 100, 100], [315, 100, 100], [15, 50, 100], [75, 50, 100]]
+];
+
+let selectedPalette = palettes[0]; // Default palette
+
+function drawPaletteSelection() {
+  const gap = 40; // Define the gap between palettes
+  const barWidth = width * 0.5 / palettes[0].length; // 50% of the width for all bars
+  const barHeight = height * 0.1; // 10% of the height for each bar
+  const startX = (width - barWidth * palettes[0].length) / 2; // Center horizontally
+
+  for (let i = 0; i < palettes.length; i++) {
+    const totalHeight = palettes.length * barHeight + (palettes.length - 1) * gap;
+    const startY = (height - totalHeight) / 2 + i * (barHeight + gap); // Center vertically
+    for (let j = 0; j < palettes[i].length; j++) {
+      fill(palettes[i][j][0], palettes[i][j][1], palettes[i][j][2]);
+      rect(startX + j * barWidth, startY, barWidth, barHeight);
+    }
+  }
+}
+
+function mousePressed() {
+  const barWidth = width / (palettes.length * palettes[0].length);
+  
+  for (let i = 0; i < palettes.length; i++) {
+    for (let j = 0; j < palettes[i].length; j++) {
+      const x = (i * palettes[i].length + j) * barWidth;
+      if (mouseX > x && mouseX < x + barWidth) {
+        selectedPalette = palettes[i];
+        //console.log(i)
+        return;
+      }
+    }
+  }
+}
+
+
+
 
 let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
@@ -619,7 +588,7 @@ function drawWeave() {
     noStroke();
     //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
     //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
-   
+
     //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
     //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
     
@@ -627,12 +596,16 @@ function drawWeave() {
     fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
    
    //draw the boxes
-    rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+   rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+    //scribble.scribbleRect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+    
     // Draw the mirrored box on the x-axis
     rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
+    //scribble.scribbleRect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
 
     // Increment the x position for the next box
     currentX += boxWidth;
+//console.log(verticalOffset)
   }
 
 
@@ -660,13 +633,19 @@ function drawWeave() {
   // If the weaveOffset exceeds the height, reset it and move up vertically
   if (weaveOffset > height) {
     weaveOffset = 0;
+
+        // Only draw when at least one sensor value is more than zero
+  if (sensors.some(sensor => sensor > 0)) {
     verticalOffset += boxHeight; // Move up for the next iteration without gap
+  }
 
     // If verticalOffset exceeds the screen height, reset it based on the setting
     if (verticalOffset > height) {
-      verticalOffset = resetToBottom ? 0 : height - boxHeight;
+      if(!resetToBottom){verticalOffset=0;viewMode = resultsScreen};
+      verticalOffset = resetToBottom ? 0 : height - boxHeight; //resettoBottom is either true or false
     }
   }
+    
 }
 
 

@@ -78,7 +78,7 @@ void setup() {
 Serial.begin(9600); //9600 is the deafult for p5.serialserver/webserial
 
 //BLUETOOTH
-SerialBT.begin("ESP32BT"); //Bluetooth device name
+SerialBT.begin("ESP32LITEBT"); //Bluetooth device name
 //Serial.println("The device started, now you can pair it with bluetooth!");
 
 
