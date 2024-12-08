@@ -12,7 +12,7 @@ let totalInputs = 8; //how many incoming inputs?
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
-let mappedControllerValues = [0,13,7,21,36,0,0,0,0,50,0,0,0,0,0,0,0,0]; //first item (0) not used
+let mappedControllerValues = [0,50,50,21,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
 let midiKnobValues = []; // Array to store MIDI knob values
@@ -223,12 +223,13 @@ function draw() {
       drawSummary();
       break;
     case 5:
-      drawWaveformGarden();
-      break;
-    case 6: 
       //drawCircularLineGraph();
       //drawCapturedDataPie();
       drawResultsScreen();
+      
+      break;
+    case 6: 
+      drawWaveformGarden();
       break;
     case 7:
       drawPaletteSelection();
@@ -390,9 +391,8 @@ function keyPressed() {
   
 
   if (key === 'b' || key === 'B') {
-    currentBlendModeIndex = (currentBlendModeIndex + 1) % blendModes.length;
-    blendMode(blendModes[currentBlendModeIndex]);
-    console.log("Current Blend Mode: " + blendModes[currentBlendModeIndex]);
+    capturedData = [];//reset data
+    if(viewMode=6){viewMode=4;verticalOffset = 0;};
   }
   if (key == "p") {
     //console.log("Ports!");
@@ -408,6 +408,7 @@ function keyPressed() {
       capturedData = [];
       isCapturing = true;
       summaryFlower = null;
+      
       flowerX = 0;
     }
   }
@@ -573,7 +574,7 @@ let verticalOffset = 0; // Initialize a variable to track the vertical offset
 let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
 
 function drawWeave() {
-  
+
   const boxHeight = map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
@@ -598,16 +599,16 @@ function drawWeave() {
     // Draw the box
     noStroke();
     //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
-    //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+    fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
 
     //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
     //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
     
     //HUE PICKED FROM A SELECTED PALETTE
-    fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
+    //fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
    
-   //draw the boxes
-   rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
+    //draw the boxes
+    rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     //scribble.scribbleRect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     
     // Draw the mirrored box on the x-axis
@@ -760,9 +761,11 @@ function hexAlpha(alpha) {
 
 function resetView() {
   background(0, 0, 32); // Clear the background
-  background(0,50,50); //dull red/brown
+  //background(0,50,50); //dull red/brown
   flowerX = 0; // Reset flower position for the garden view
   // Add any other reset operations here if needed for other views
+
+ 
 }
 
 function drawSummary() {
@@ -1100,7 +1103,7 @@ function drawWaveformLegend() {
   text("Trees: Data points", legendX, legendY + 60);
 }
 
-let runOnce = false;
+runOnce = false;
 
 // New function to draw circular line graphs
 function drawCircularLineGraph() {
@@ -1242,12 +1245,12 @@ function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, averag
   push();
   translate(x + width / 2, y + height / 4); // Center the graph
   rotate(rotation); // Apply rotation
-  const radius = min(width, height) / 4; // Radius for the graph
+  const radius = min(width, height) / 2; // Radius for the graph
 
   // Set color based on whether this is the highest average
   //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
   const colorHue = average; // Set hue based on the average value of each sensor
-  fill(colorHue, 100, 100, mappedControllerValues[9]);
+  fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
   noStroke();
   beginShape();
   for (let j = 0; j < capturedData.length; j++) {
