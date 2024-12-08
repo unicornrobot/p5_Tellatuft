@@ -70,8 +70,8 @@ int readingIndex = 0;
 void setup() {
 
   //adc_power_off();
-   // WiFi.disconnect(true);  // Disconnect from the network
-   //WiFi.mode(WIFI_OFF);    // Switch WiFi off
+  //  WiFi.disconnect(true);  // Disconnect from the network
+  // WiFi.mode(WIFI_OFF);    // Switch WiFi off
 
   
   // put your setup code here, to run once:

@@ -61,10 +61,10 @@ let vert_count = 7
 let sunColor;
 let sunAlpha = 50;
 
-let toggleOutline = true;
+let toggleOutline = false;
 //
 
-// Add this near the top with other global variables
+// 
 let viewMode
 let startScreen = 4; // 4 is weave drawing
 let resultsScreen = 6;// (used if captureMode = fixed/continous) 5 = wavegarden - 6 = circulrgraph
@@ -227,7 +227,7 @@ function draw() {
       break;
     case 6: 
       drawCircularLineGraph();
-      //drawCapturedDataGraphs();
+      drawCapturedDataPie();
       break;
     case 7:
       drawPaletteSelection();
@@ -361,17 +361,7 @@ function drawLiveGraphs() {
   }
 }
 
-function polygon(x, y, radius, npoints) {
-  let angle = TWO_PI / npoints;
-  beginShape();
-  for (let a = 0; a < TWO_PI; a += angle) {
-    let sx = x + cos(a) * radius;
-    let sy = y + sin(a) * radius;
-    vertex(sx, sy);
-  }
-  endShape(CLOSE);
-}
-{w-=0.009}//speed
+
 
 
 ///FULLSCREEN CODE
@@ -452,8 +442,8 @@ function drawGeometricAnimations() {
     const angle = frameCount * 0.02 + i * TWO_PI / 5;
     const x = centerX + cos(angle) * maxRadius * 0.6;
     const y = centerY + sin(angle) * maxRadius * 0.6;
-    const size = map(sensors[i], 0, 100, 20, 80);
-    const hue = map(sensors[i], 0, 100, 0, 360);
+    const size = map(sensors[i], 0, 360, 20, 200);
+    const hue = sensors[i];//map(sensors[i], 0, 100, 0, 360);
     
     push();
     translate(x, y);
@@ -481,24 +471,44 @@ function drawGeometricAnimations() {
   }
 
   // Draw central circle
-  const avgSensor = sensors.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
+  const avgSensor = sensors.slice(0, totalInputs).reduce((a, b) => a + b, 0) / totalInputs;
   const centralSize = map(avgSensor, 0, 100, 20, 100);
   const centralHue = map(avgSensor, 0, 100, 0, 360);
   
   noStroke();
-  fill(centralHue, 100, 100, 10); // Increased transparency
+  noFill();
+  //fill(centralHue, 100, 100, 10); // Increased transparency
+  
+  //fill(centralHue, 100, 100, 10); // Increased transparency
   circle(centerX, centerY, centralSize);
 
   // Display sensor values
+  if(debugMode){
   textAlign(LEFT, TOP);
   textSize(12);
   fill(1);
-  rect(10,10,50,100);
-  for (let i = 0; i < 5; i++) {
+  rect(10,10,50,totalInputs*20);
+  for (let i = 0; i < totalInputs; i++) {
     fill(i * 72 % 360, 100, 100);
     text(`S${i}: ${sensors[i]}`, 10, 10 + i * 20);
   }
+  }
 }
+
+
+function polygon(x, y, radius, npoints) {
+  let angle = TWO_PI / npoints;
+  beginShape();
+  for (let a = 0; a < TWO_PI; a += angle) {
+    let sx = x + cos(a) * radius;
+    let sy = y + sin(a) * radius;
+    vertex(sx, sy);
+  }
+  endShape(CLOSE);
+}
+{w-=0.009}//speed
+
+
 
 function drawWave(waveHeight,colR,colG,colB, sensorData){
   //background(255)
@@ -635,7 +645,7 @@ function drawWeave() {
     weaveOffset = 0;
 
         // Only draw when at least one sensor value is more than zero
-  if (sensors.some(sensor => sensor > 0)) {
+  if (sensors.some(sensor => sensor > 50)) {
     verticalOffset += boxHeight; // Move up for the next iteration without gap
   }
 
@@ -1096,9 +1106,9 @@ function drawCircularLineGraph() {
 
   background(0)
   const totalSensors = sensors.length; // Total number of sensors
-  const centerX = width / 2; // X center of the concentric rings
-  const centerY = height / 2; // Y center of the concentric rings
-  const maxRadius = min(width, height) * 0.4; // Maximum radius for the outermost ring
+  const centerX = width *0.4;//width *0.15;  //  width / 2; // X center of the concentric rings
+  const centerY = height/2;//height * 0.2; //height / 2; // Y center of the concentric rings
+  const maxRadius = min(width, height) * 0.4;//0.15; // Maximum radius for the outermost ring 0.4 for full
   const ringSpacing = maxRadius / totalSensors; // Equal spacing for each sensor ring
   //BLEND MODES
 
@@ -1110,18 +1120,11 @@ blendMode(BLEND)
     const sensorDataString = sensorData.join(', '); // Convert array to string
     const averageValue = round(sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length); // Calculate average
    
-    //debug the data
-  if(debugMode){
-    if(!runOnce){
-    console.log(`Sensor ${i} Data: [${sensorDataString}]`); // Log the array contents
-    console.log(`Sensor ${i} Length: ${sensorData.length}`); // Log the array length  
-    console.log(`Sensor ${i} Average: ${averageValue}`); // Log the average value
-  }}
+    const colorHue = averageValue;//map(mappedControllerValues[2], 0, maxDataValue, 0, 360); // Set hue based on average value
     
-    
-    const colorHue = map(mappedControllerValues[2], 0, maxDataValue, 0, 360); // Set hue based on average value
-    const alpha = map(mappedControllerValues[9], 0, 360, 0, 100); // Alpha value
+    //const alpha = map(mappedControllerValues[9], 0, 360, 5, 40); // Alpha value
     //fill(averageValue, 100, 100, alpha); // Fill color based on average hue
+    let alpha = 50;
     if(!toggleOutline){
      fill(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
       noStroke();
@@ -1141,34 +1144,47 @@ blendMode(BLEND)
       curveVertex(x, y); // Add vertex to the shape
     }
     endShape(CLOSE); // End drawing the line graph with a closed shape
-  }
+
+
+//debug the captured data
+if(debugMode){
+  if(!runOnce){
+  console.log(`Sensor ${i} Data: [${sensorDataString}]`); // Log the array contents
+  console.log(`Sensor ${i} Length: ${sensorData.length}`); // Log the array length  
+  console.log(`Sensor ${i} Average: ${averageValue}`); // Log the average value
+  }}}
+  //prevent repeat console logs
   runOnce = true;
 }
 
-function drawCapturedDataGraphs() {
-  const totalSensors = sensors.length; // Total number of sensors
-  const totalRings = capturedData.length; // Total number of rings based on captured data
-  const ringSpacing = width / (totalRings + 1); // Equal spacing for each ring
+function drawCapturedDataPie() {
+  const totalInputs = sensors.length; // Total number of inputs
+  const centerX = width *0.9;  //  width / 2; // X center of the concentric rings
+  const centerY = height * 0.2; //height / 2; // Y center of the concentric rings
+  const radius = min(width, height) * 0.10; // Maximum radius for the outermost ring 0.4 for full
+  
+  // Calculate the average value for each sensor
+  const averages = sensors.map((_, i) => {
+    const sensorData = capturedData.map(data => data[i]);
+    return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;
+  });
 
-  for (let i = 0; i < totalSensors; i++) {
-    const sensorData = capturedData.map(data => data[i]); // Get the captured data for the current sensor
-    const colorHue = map(i, 0, totalSensors, 0, 360); // Generate a color hue based on the sensor index
-    stroke(colorHue, 100, 100); // Set stroke color based on the hue
-    noFill(); // No fill for the line graph
+  // Calculate the total of all averages to determine segment sizes
+  const totalAverage = averages.reduce((sum, avg) => sum + avg, 0);
 
-    beginShape(); // Start drawing the line graph
-    for (let j = 0; j < capturedData.length; j++) {
-      const x = ringSpacing * (j + 1); // X position based on ring index
-      const y = height - map(sensorData[j], 0, 100, height, 0); // Y position based on sensor value, ensuring the graph is vertically spaced
-      if (j === 0) {
-        vertex(x, y); // First vertex
-      } else {
-        curveVertex(x, y); // Smooth curve for the rest of the vertices
-      }
-    }
-    // Connect the last vertex to the first vertex to close the curve
-    curveVertex(ringSpacing, height - map(sensorData[0], 0, 100, height, 0));
-    endShape(CLOSE); // End drawing the line graph with a closed curve
+  let startAngle = 0; // Starting angle for the first segment
+
+  const spacing = 0.1; // Define the spacing between segments
+  for (let i = 0; i < totalInputs; i++) {
+    const segmentSize = (averages[i] / totalAverage) * TWO_PI; // Proportional segment size
+    const colorHue = map(i, 0, totalInputs, 0, 360); // Generate a color hue based on the sensor index
+    fill(colorHue, 100, 100, 20); // Set fill color based on the hue
+
+    // Draw the pie chart segment with spacing, including spacing at the center
+    arc(centerX, centerY, radius * 2 - spacing, radius * 2 - spacing, startAngle + spacing / 2, startAngle + segmentSize - spacing / 2, PIE);
+
+    // Update the start angle for the next segment
+    startAngle += segmentSize;
   }
 }
 

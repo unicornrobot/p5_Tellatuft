@@ -86,9 +86,9 @@ sendControlChange(controllerNumber, valueToSend);
       }, 
       "A#-1": () => { //button 3
         saveCanvas('weave_' + Date.now(), 'png');
-        toggleOutline = false;
+        
       },  
-      "B-1": () => noFunc = 1,  //4
+      "B-1": () => {toggleOutline = true;},  //4
       "C0": () => noFunc = 1,  //5
       "C#0": () => noFunc = 1,  //6
       "D0": () => noFunc = 1,  //7
@@ -130,8 +130,8 @@ sendControlChange(controllerNumber, valueToSend);
   const buttonOffActions = {
     "G#-1": () => sunColor="#FFFF00",
     "A-1": () => noFunc = 1,
-    "A#-1": () => toggleOutline = true, //3
-    "B-1": () => noFunc = 1,  //4
+    "A#-1": () => noFunc = 1, //3
+    "B-1": () => {toggleOutline = false;},  //4
     "C0": () => noFunc = 1,  //5
     "C#0": () => noFunc = 1,  //6
     "D0": () => noFunc = 1,  //7
