@@ -12,7 +12,7 @@ let totalInputs = 8; //how many incoming inputs?
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
-let mappedControllerValues = [0,13,7,21,36,0,0,0,0,0,0,0,0,0,0,0,0,0]; //first item (0) not used
+let mappedControllerValues = [0,13,7,21,36,0,0,0,0,50,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
 let midiKnobValues = []; // Array to store MIDI knob values
@@ -226,8 +226,9 @@ function draw() {
       drawWaveformGarden();
       break;
     case 6: 
-      drawCircularLineGraph();
-      drawCapturedDataPie();
+      //drawCircularLineGraph();
+      //drawCapturedDataPie();
+      drawResultsScreen();
       break;
     case 7:
       drawPaletteSelection();
@@ -1191,3 +1192,93 @@ function drawCapturedDataPie() {
 
 
 
+
+function drawResultsScreen() {
+
+    background(0, 0, 32); // Clear background
+
+    const totalSensors = sensors.length; // Total number of sensors
+    const gridCols = 2; // Number of columns in the grid
+    const gridRows = Math.ceil(totalSensors / gridCols); // Calculate rows based on sensors
+    const cellWidth = width / gridCols; // Width of each cell
+    const cellHeight = height / gridRows; // Height of each cell
+
+    // Calculate averages for each sensor
+    const averages = sensors.map((_, i) => {
+        const sensorData = capturedData.map(data => data[i]);
+        return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;
+    });
+
+    // Find the sensor with the highest average
+    const highestAverage = Math.max(...averages);
+    const highestSensorIndex = averages.indexOf(highestAverage);
+
+    // Draw visualizations in a grid
+    for (let i = 0; i < totalSensors; i++) {
+        const col = i % gridCols; // Column index
+        const row = Math.floor(i / gridCols); // Row index
+        const x = col * cellWidth; // X position
+        const y = row * cellHeight; // Y position
+
+        // Generate random positions within the square
+        
+        const squareSize = min(width, height) / 4; // Size of the square
+        const randomX = random(squareSize / 2, width - squareSize / 2);
+        const randomY = random(squareSize / 2, height - squareSize / 2);
+      
+        const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
+        const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
+        
+        //draw randomnly onscreen 
+        drawCircularLineGraphForSensor(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i]);
+
+      }
+
+   
+}
+
+function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, average, highlightIndex, rotation) {
+  // Draw a circular line graph for the specific sensor
+  push();
+  translate(x + width / 2, y + height / 4); // Center the graph
+  rotate(rotation); // Apply rotation
+  const radius = min(width, height) / 4; // Radius for the graph
+
+  // Set color based on whether this is the highest average
+  //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
+  const colorHue = average; // Set hue based on the average value of each sensor
+  fill(colorHue, 100, 100, mappedControllerValues[9]);
+  noStroke();
+  beginShape();
+  for (let j = 0; j < capturedData.length; j++) {
+      const angle = map(j, 0, capturedData.length, 0, TWO_PI);
+      //const r = radius + map(capturedData[j][sensorIndex], 0, 100, -radius / 2, radius / 2); // Adjust radius based on data
+      const r = radius + map(capturedData[j][sensorIndex], 0, 100, -radius / 2, mappedControllerValues[1]); // Adjust radius based on data
+      const xPos = r * cos(angle);
+      const yPos = r * sin(angle);
+      if (j === 0) {
+        curveVertex(xPos, yPos); // Use curveVertex for smooth lines
+      }
+      curveVertex(xPos, yPos); // Use curveVertex for smooth lines
+      if (j === capturedData.length - 1) {
+        curveVertex(xPos, yPos); // Ensure the curve closes smoothly
+      }
+  }
+  endShape(CLOSE);
+  pop();
+}
+
+
+function drawAverageBarChart(x, y, width, averages) {
+  const barWidth = width / averages.length; // Width of each bar
+
+  // Calculate the highest sensor index by comparing the averages
+  const highestAverage = Math.max(...averages);
+  const highestSensorIndex = averages.indexOf(highestAverage);
+
+  for (let i = 0; i < averages.length; i++) {
+      const barHeight = map(averages[i], 0, 100, 0, height / 4); // Map average to bar height
+      fill(i === highestSensorIndex ? 'red' : 'blue'); // Highlight the highest average
+      rect(x + i * barWidth, y, barWidth - 2, -barHeight); // Draw the bar
+  }
+}
