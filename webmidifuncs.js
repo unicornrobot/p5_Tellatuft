@@ -79,7 +79,7 @@ sendControlChange(controllerNumber, valueToSend);
         //viewMode = 5
       }, //1
       "A-1": () => { //Button 2
-        background(0,50,50); //dull red/brown
+        background(0,0,32); //grey
         verticalOffset = true; //resets the yposition in the drawWeave function
         
 

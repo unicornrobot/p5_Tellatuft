@@ -8,7 +8,7 @@ let latestData = "waiting for data"; // variable to hold the data
 let portButton;
 
 let inputs = []; // all your inputs in an array
-let totalInputs = 8; //how many incoming inputs?
+let totalInputs = 5; //how many incoming inputs?
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
@@ -30,7 +30,6 @@ let maxDataValue = 360; // the max value the sensor is sending
 
 let displayInfo = false;
 
-//var scribble = new Scribble();
 
 let graphData = []; // Array to store historical data for each sensor
 //const maxDataPoints = 360; // Maximum number of data points to store for each sensor
@@ -52,11 +51,6 @@ let time = 0
 let vel = NaN // TWO_PI / 300 assigned in setup()
 let hori_count= 14
 let vert_count = 7
-/*let colors = ["#F94144", "#F65A38", "#F3722C",
-              "#F68425", "#F8961E", "#F9AF37",
-              "#F9C74F", "#C5C35E", "#90BE6D",
-              "#6AB47C", "#43AA8B", "#4D908E",
-              "#52838F", "#577590"]*/
 
 let sunColor;
 let sunAlpha = 50;
@@ -92,6 +86,7 @@ function setup() {
   fullscreen();
   //textFont(myFont);
   colorMode(HSB,360,100,100,100)
+  background(0,0,32);//grey
   blendMode(SCREEN)
   noFill()
   strokeWeight(3)
@@ -103,7 +98,8 @@ function setup() {
     .catch(err => alert(err));
   
   
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(windowWidth, windowHeight,WEBGL);
+ 
 
 
   sunColor = color(60, 100, 100, 10);
@@ -205,6 +201,10 @@ function draw() {
     resetView();
     previousViewMode = viewMode;
   }
+
+  //NEEDED WHEN IN WEBGL MODE
+  translate(-width / 2, -height / 2); // Move the origin to the top-left corner
+  /////////////////////////////
 
   switch (viewMode) {
     case 0:
@@ -368,9 +368,11 @@ function drawLiveGraphs() {
 
 ///FULLSCREEN CODE
 function mousePressed() {
+  background(0,0,32);
   if (mouseX > 0 && mouseX < windowWidth && mouseY > 0 && mouseY < windowHeight) {
     let fs = fullscreen();
     fullscreen(!fs);
+    //background(0,0,32);
   }
 }
 
@@ -551,7 +553,7 @@ function drawPaletteSelection() {
   }
 }
 
-function mousePressed() {
+/*function mousePressed() {
   const barWidth = width / (palettes.length * palettes[0].length);
   
   for (let i = 0; i < palettes.length; i++) {
@@ -565,6 +567,7 @@ function mousePressed() {
     }
   }
 }
+  */
 
 
 
@@ -609,11 +612,10 @@ function drawWeave() {
    
     //draw the boxes
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
-    //scribble.scribbleRect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     
     // Draw the mirrored box on the x-axis
     rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
-    //scribble.scribbleRect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
+
 
     // Increment the x position for the next box
     currentX += boxWidth;
@@ -1109,7 +1111,7 @@ runOnce = false;
 function drawCircularLineGraph() {
 
   background(0)
-  const totalSensors = sensors.length; // Total number of sensors
+  const totalSensors = totalInputs;//sensors.length; // Total number of sensors
   const centerX = width *0.4;//width *0.15;  //  width / 2; // X center of the concentric rings
   const centerY = height/2;//height * 0.2; //height / 2; // Y center of the concentric rings
   const maxRadius = min(width, height) * 0.4;//0.15; // Maximum radius for the outermost ring 0.4 for full
@@ -1232,15 +1234,17 @@ function drawResultsScreen() {
         const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
         const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
         
-        //draw randomnly onscreen 
-        drawCircularLineGraphForSensor(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i]);
+        //draw becky blobs randomnly onscreen 
+        let brushMode = true;
+        drawCircularLineGraphForSensor(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
 
       }
 
    
 }
+let noRedraw= true;
 
-function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, average, highlightIndex, rotation) {
+function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, average, highlightIndex, rotation,brushMode) {
   // Draw a circular line graph for the specific sensor
   push();
   translate(x + width / 2, y + height / 4); // Center the graph
@@ -1249,26 +1253,50 @@ function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, averag
 
   // Set color based on whether this is the highest average
   //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
-  const colorHue = average; // Set hue based on the average value of each sensor
-  fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
-  noStroke();
-  beginShape();
+  const colorHue = average; // Set hue based on the average value of each sensor (0-360)
+
+  //noStroke();
+  
+
+  if(brushMode)
+    {
+      brush.noField();
+      brush.noStroke();
+      //brush.fillAnimatedMode(true); // THIS DOESNT SEEM TO PREVENT A REDRAW OF THE FILL
+
+      brush.fill(average,100,100,100);
+      //brush.fillTexture(map(average,0,360,0,1),0) //texture strength (0-1) and border intensity (0-1)
+      brush.fillTexture(1,0) //texture strength (0-1) and border intensity (0-1)
+      brush.bleed(map(average,0,360,0,0.3), "out");
+
+
+    }else{
+     fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
+  };
+
+  if(brushMode){brush.beginShape(0);}else{beginShape();};
+
   for (let j = 0; j < capturedData.length; j++) {
       const angle = map(j, 0, capturedData.length, 0, TWO_PI);
       //const r = radius + map(capturedData[j][sensorIndex], 0, 100, -radius / 2, radius / 2); // Adjust radius based on data
-      const r = radius + map(capturedData[j][sensorIndex], 0, 100, -radius / 2, mappedControllerValues[1]); // Adjust radius based on data
+      const r = radius + map(capturedData[j][sensorIndex], 0, 100, -radius / 2, mappedControllerValues[3]); // Adjust radius based on data
       const xPos = r * cos(angle);
       const yPos = r * sin(angle);
       if (j === 0) {
-        curveVertex(xPos, yPos); // Use curveVertex for smooth lines
+       if(brushMode){brush.vertex(xPos, yPos)}else{curveVertex(xPos, yPos);}; // Use curveVertex for smooth lines
       }
-      curveVertex(xPos, yPos); // Use curveVertex for smooth lines
+      //brush.vertex(xPos, yPos); // Use curveVertex for smooth lines
+      if(brushMode){brush.vertex(xPos, yPos)}else{curveVertex(xPos, yPos);}; 
+
       if (j === capturedData.length - 1) {
-        curveVertex(xPos, yPos); // Ensure the curve closes smoothly
+        if(brushMode){brush.vertex(xPos, yPos)}else{curveVertex(xPos, yPos);};       // Ensure the curve closes smoothly
       }
   }
-  endShape(CLOSE);
+  //brush.endShape(CLOSE);
+  if(brushMode){brush.endShape(CLOSE);}else{endShape(CLOSE)};
   pop();
+  
+if(brushMode){noLoop()}; //KILLS THE SCRIPT DEAD - NOT IDEAL - NO MORE INTERACTION
 }
 
 
