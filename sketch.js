@@ -1,14 +1,16 @@
-
 //CLICK FOR FULLSCREEN TOGGLE
-
 // serial communication between a microcontroller with 8 sensor values
+
+
+
+
 
 let serial; // variable for the serial object
 let latestData = "waiting for data"; // variable to hold the data
 let portButton;
 
 let inputs = []; // all your inputs in an array
-let totalInputs = 5; //how many incoming inputs?
+let totalInputs = 8; //how many incoming inputs?
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
@@ -30,16 +32,16 @@ let maxDataValue = 360; // the max value the sensor is sending
 
 let displayInfo = false;
 
+let backgroundColor =[0,0,32] //0,0,32 = grey
+
+let brushMode = false; // enable p5 Brush mode - stops loop - needs fixing
+
 
 let graphData = []; // Array to store historical data for each sensor
 //const maxDataPoints = 360; // Maximum number of data points to store for each sensor
 let hillHeight = 30; //value of disatnce between 
 
-let  w=500
-
-let h=200
-
-let noFunc = 1;
+let  w=500;let h=200;let noFunc = 1;
 
 // Add these near the top of your sketch, with other global variables
 let frameCounter = 0;
@@ -56,9 +58,9 @@ let sunColor;
 let sunAlpha = 50;
 
 let toggleOutline = false;
-//
 
-// 
+
+
 let viewMode
 let startScreen = 4; // 4 is weave drawing
 let resultsScreen = 6;// (used if captureMode = fixed/continous) 5 = wavegarden - 6 = circulrgraph
@@ -82,8 +84,13 @@ let isCapturing = true;
 let summaryData = 0;
 let waveHeight; // Declare waveHeight as a global variable
 
+
+
+////SETUP//////
+
 function setup() {
-  fullscreen();
+
+  //fullscreen();
   //textFont(myFont);
   colorMode(HSB,360,100,100,100)
   background(0,0,32);//grey
@@ -220,17 +227,19 @@ function draw() {
       drawFlowerGarden();
       break;
     case 4:
+      
       drawSummary();
       break;
     case 5:
       //drawCircularLineGraph();
       //drawCapturedDataPie();
       drawResultsScreen();
+      //refreshColors();
       
       break;
     case 6: 
       drawWaveformGarden();
-      break;
+      break;v
     case 7:
       drawPaletteSelection();
       break;
@@ -372,7 +381,7 @@ function mousePressed() {
   if (mouseX > 0 && mouseX < windowWidth && mouseY > 0 && mouseY < windowHeight) {
     let fs = fullscreen();
     fullscreen(!fs);
-    //background(0,0,32);
+    //generateNewColorRamp();
   }
 }
 
@@ -390,9 +399,12 @@ function keyPressed() {
     displayInfo = !displayInfo;
     }
 
+    if (key === '2' ){
+      background(backgroundColor);
+    }
   
 
-  if (key === 'b' || key === 'B') {
+  if (key === 'b' || key === 'B') { //becky mode
     capturedData = [];//reset data
     if(viewMode=6){viewMode=4;verticalOffset = 0;};
   }
@@ -623,7 +635,6 @@ function drawWeave() {
   }
 
 
-
     if (debugMode) {
       fill(0, 0, 0, 150); // Semi-transparent black background
       noStroke();
@@ -671,7 +682,7 @@ function drawWeave() {
 function drawFlowerGarden() {
   // Clear background only when starting a new row
   if (flowerX === 0) {
-    background(0, 0, 32);
+    background(backgroundColor);
   }
 
   // Only draw when at least one sensor value is more than zero
@@ -762,7 +773,8 @@ function hexAlpha(alpha) {
 }
 
 function resetView() {
-  background(0, 0, 32); // Clear the background
+  background(backgroundColor)
+
   //background(0,50,50); //dull red/brown
   flowerX = 0; // Reset flower position for the garden view
   // Add any other reset operations here if needed for other views
@@ -771,7 +783,6 @@ function resetView() {
 }
 
 function drawSummary() {
-
   if (isCapturing) {
     // Continue drawing the flower garden and capturing data
     //drawFlowerGarden();
@@ -881,7 +892,7 @@ function drawLargeSummaryFlower() {
 }
 
 function drawDataStar() {
-  background(0, 0, 32);
+  background(backgroundColor)
   translate(width / 2, height / 2);
   
   const maxRadius = min(width, height) * 0.4;
@@ -1110,7 +1121,8 @@ runOnce = false;
 // New function to draw circular line graphs
 function drawCircularLineGraph() {
 
-  background(0)
+  background(backgroundColor)
+
   const totalSensors = totalInputs;//sensors.length; // Total number of sensors
   const centerX = width *0.4;//width *0.15;  //  width / 2; // X center of the concentric rings
   const centerY = height/2;//height * 0.2; //height / 2; // Y center of the concentric rings
@@ -1194,13 +1206,22 @@ function drawCapturedDataPie() {
   }
 }
 
+let hasGeneratedColors = false; // Flag to track if colors have been generated
 
+// Function to refresh colors, called when needed
+function refreshColors(averagesList) {
+  if (!hasGeneratedColors) { // Check if colors have already been generated
+      generateNewColorRamp(averagesList,8); // Generate new colorsb
+      hasGeneratedColors = true; // Set the flag to true
+  }
+}
 
-
+//declare global
+let averages =[];
 
 function drawResultsScreen() {
 
-    background(0, 0, 32); // Clear background
+  background(backgroundColor)
 
     const totalSensors = sensors.length; // Total number of sensors
     const gridCols = 2; // Number of columns in the grid
@@ -1209,10 +1230,20 @@ function drawResultsScreen() {
     const cellHeight = height / gridRows; // Height of each cell
 
     // Calculate averages for each sensor
-    const averages = sensors.map((_, i) => {
+    // Calculate averages for each sensor
+    // Calculate the average value for each sensor
+    // `sensors.map` iterates over each sensor, and for each sensor:
+    // 1. `capturedData.map(data => data[i])` extracts the data for the current sensor across all captured data points.
+    // 2. `sensorData.reduce((sum, value) => sum + value, 0)` sums up all the values for the current sensor.
+    // 3. The sum is then divided by the number of data points (`sensorData.length`) to get the average value for the current sensor.
+   
+    averages = sensors.map((_, i) => {
         const sensorData = capturedData.map(data => data[i]);
-        return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;
+        return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;      
     });
+
+
+    refreshColors(averages);
 
     // Find the sensor with the highest average
     const highestAverage = Math.max(...averages);
@@ -1235,7 +1266,7 @@ function drawResultsScreen() {
         const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
         
         //draw becky blobs randomnly onscreen 
-        let brushMode = true;
+        //brushMode = true;
         drawCircularLineGraphForSensor(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
 
       }
@@ -1244,7 +1275,45 @@ function drawResultsScreen() {
 }
 let noRedraw= true;
 
+
+
+function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
+  window.hslColorValues = generateColorRamp({
+      huelist: huelist,
+      total: total,                           // number of colors in the ramp
+      hStart: hstart,        // hue at the start of the ramp
+      hCycles: 1,                         // number of full hue cycles 
+      hStartCenter: 0.5,                  // where in the ramp the hue should be centered
+      hEasing: (x, fr) => x,              // hue easing function
+      sRange: [0.4, 0.35],                 // saturation range
+      sEasing: (x, fr) => Math.pow(x, 2), // saturation easing function
+      lRange: [Math.random() * 0.1, 0.9],  // lightness range
+      lEasing: (x, fr) => Math.pow(x, 1.5) // lightness easing function
+  });
+}
+
 function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, average, highlightIndex, rotation,brushMode) {
+
+  const numSensors = totalInputs; // Number of sensors
+  const boxWidth = window.width/totalInputs; // Width of each box
+  const boxHeight = 50; // Height of each box
+
+  // Draw boxes in a line at the top of the screen, each with a color from the palette
+  //window.hslColorValues = generateColorRamp();
+    let colorHue = hslColorValues[sensorIndex][0];
+    let colorSat = hslColorValues[sensorIndex][1] * 100;
+    let colorBri = hslColorValues[sensorIndex][2] * 100;
+
+    //use averages from captured data as hue/sat/bri values
+    fill(average, average, average, 50);
+    //use hslcolorvalues from rampensau
+    //fill(colorHue, colorSat, colorBri, 50);
+
+    //palette boxes
+    rect(sensorIndex * boxWidth, 0, boxWidth, boxHeight);
+    
+
+
   // Draw a circular line graph for the specific sensor
   push();
   translate(x + width / 2, y + height / 4); // Center the graph
@@ -1253,10 +1322,8 @@ function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, averag
 
   // Set color based on whether this is the highest average
   //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
-  const colorHue = average; // Set hue based on the average value of each sensor (0-360)
+  //const colorHue = average; // Set hue based on the average value of each sensor (0-360)
 
-  //noStroke();
-  
 
   if(brushMode)
     {
@@ -1271,7 +1338,13 @@ function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, averag
 
 
     }else{
-     fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
+     //fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
+     //fill(colorHue,colorSat,colorBri,50);
+     fill(average,average,average,50);
+      //fill(hslColorValues[7][0],hslColorValues[0][1]*100,hslColorValues[0][1]*100)
+     //console.log(hslColorValues)
+
+     //fill(colorHue, colorSat, colorBri, 50);
   };
 
   if(brushMode){brush.beginShape(0);}else{beginShape();};

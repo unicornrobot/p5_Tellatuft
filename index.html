@@ -17,6 +17,15 @@
 
     <script src="webmidifuncs.js"></script>
     <script src="webserialfuncs.js"></script>
+
+    <!--color generation-->
+    <script type="module">
+      import { generateColorRamp } from  "https://esm.sh/rampensau/";
+
+      window.generateColorRamp = generateColorRamp; // Expose to global scope
+
+    </script>
+    
     
   </head>
 
