@@ -1,8 +1,7 @@
 //CLICK FOR FULLSCREEN TOGGLE
 // serial communication between a microcontroller with 8 sensor values
-
-
-
+//visualizations based on the reading
+//different modes
 
 
 let serial; // variable for the serial object
@@ -14,7 +13,7 @@ let totalInputs = 8; //how many incoming inputs?
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
-let mappedControllerValues = [0,50,50,21,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
+let mappedControllerValues = [0,150,50,21,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
 let midiKnobValues = []; // Array to store MIDI knob values
@@ -59,11 +58,9 @@ let sunAlpha = 50;
 
 let toggleOutline = false;
 
-
-
 let viewMode
 let startScreen = 4; // 4 is weave drawing
-let resultsScreen = 6;// (used if captureMode = fixed/continous) 5 = wavegarden - 6 = circulrgraph
+let resultsScreen = 5;// (used if captureMode = fixed/continous) 5 = beckymode - 6 = circulrgraph
 
 
 if (offlineMode){viewMode = 5;} else {viewMode = startScreen;}
@@ -83,7 +80,7 @@ let capturedData = [];
 let isCapturing = true;
 let summaryData = 0;
 let waveHeight; // Declare waveHeight as a global variable
-
+let averages =[];
 
 
 ////SETUP//////
@@ -145,9 +142,6 @@ function setup() {
   waveHeight = height / 20; // Initialize waveHeight based on the canvas height
 }
 
-
-
-
 // Function to generate sample data
 function generateSampleData() {
   sampleData = [];
@@ -170,7 +164,6 @@ function generateSampleData() {
   }
 }
 
-
 // Function to save captured data and mapped controller values to local storage
 function saveDataToLocalStorage() {
   localStorage.setItem('capturedData', JSON.stringify(capturedData));
@@ -179,7 +172,6 @@ function saveDataToLocalStorage() {
 }
 
 // when data is received in the serial buffer
-
 function gotData() {
   let currentString = serial.readLine(); // store the data in a variable
   //trim(currentString); // get rid of whitespace
@@ -202,6 +194,7 @@ function gotData() {
     
   }
 }
+
 
 function draw() {
   if (viewMode !== previousViewMode) {
@@ -227,15 +220,17 @@ function draw() {
       drawFlowerGarden();
       break;
     case 4:
-      
-      drawSummary();
+      drawWeave();
+      captureData();
+      //drawSummary();
       break;
     case 5:
-      //drawCircularLineGraph();
-      //drawCapturedDataPie();
-      drawResultsScreen();
-      //refreshColors();
-      
+      drawCircularLineGraph(width*0.1, height*0.17 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+      drawCapturedDataPie(width*0.1, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+
+      drawLineGraph();
+
+      //drawResultsScreen(); //Becky mode
       break;
     case 6: 
       drawWaveformGarden();
@@ -372,36 +367,47 @@ function drawLiveGraphs() {
   }
 }
 
-
-
-
 ///FULLSCREEN CODE
 function mousePressed() {
   background(0,0,32);
   if (mouseX > 0 && mouseX < windowWidth && mouseY > 0 && mouseY < windowHeight) {
-    let fs = fullscreen();
-    fullscreen(!fs);
+    
+    //fullscreen mouse toggle - disabled while developing 
+    //let fs = fullscreen();
+    //fullscreen(!fs);
+    
     //generateNewColorRamp();
   }
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  resetView();
 }
 
 function keyPressed() {
 
+  if (key === 'f' || key === 'F') { // Press 'S' to save data
+    let fs = fullscreen();
+    fullscreen(!fs);
+  }
+
+
   if (key === 's' || key === 'S') { // Press 'S' to save data
     saveDataToLocalStorage();
+    saveCanvas('weave_' + Date.now(), 'png');
   }
 
   if (key === 'i' || key === 'I') { // Press 'S' to save data
     displayInfo = !displayInfo;
     }
 
-    if (key === '2' ){
-      background(backgroundColor);
-    }
+    if (key === '0' ){viewMode=0;}
+    if (key === '1' ){viewMode=1;}
+    if (key === '2' ){viewMode=2;}
+    if (key === '3' ){viewMode=3;}
+    if (key === '4' ){viewMode=4;}
+    if (key === '5' ){viewMode=5;}
   
 
   if (key === 'b' || key === 'B') { //becky mode
@@ -510,6 +516,7 @@ function drawGeometricAnimations() {
   }
   }
 }
+//
 
 
 function polygon(x, y, radius, npoints) {
@@ -522,9 +529,6 @@ function polygon(x, y, radius, npoints) {
   }
   endShape(CLOSE);
 }
-{w-=0.009}//speed
-
-
 
 function drawWave(waveHeight,colR,colG,colB, sensorData){
   //background(255)
@@ -535,10 +539,6 @@ fill(colR,colG,colB)
 ellipse(x,y+sensorData,10,10)
 
 }
-
-//////////////////////
-//////DRAW WEAVE/////
-////////////////////
 
 
 let palettes = [
@@ -565,28 +565,15 @@ function drawPaletteSelection() {
   }
 }
 
-/*function mousePressed() {
-  const barWidth = width / (palettes.length * palettes[0].length);
-  
-  for (let i = 0; i < palettes.length; i++) {
-    for (let j = 0; j < palettes[i].length; j++) {
-      const x = (i * palettes[i].length + j) * barWidth;
-      if (mouseX > x && mouseX < x + barWidth) {
-        selectedPalette = palettes[i];
-        //console.log(i)
-        return;
-      }
-    }
-  }
-}
-  */
 
-
+//////////////////////
+//////DRAW WEAVE/////
+////////////////////
 
 
 let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
-let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
+let resetToBottom = false; // Setting to enable drawing to start at the bottom when it reaches the top
 
 function drawWeave() {
 
@@ -672,9 +659,6 @@ function drawWeave() {
   }
     
 }
-
-
-
 
 
 
@@ -775,44 +759,17 @@ function hexAlpha(alpha) {
 function resetView() {
   background(backgroundColor)
 
-  //background(0,50,50); //dull red/brown
   flowerX = 0; // Reset flower position for the garden view
   // Add any other reset operations here if needed for other views
 
  
 }
 
-function drawSummary() {
-  if (isCapturing) {
-    // Continue drawing the flower garden and capturing data
-    //drawFlowerGarden();
-    drawWeave();
-    captureData();
-    
-    // Check if we've reached the end of the screen
-    if (flowerX >= width) {
-      isCapturing = false;
-      calculateSummary();
-    }
-  } else {
-    // Draw the summary viz when the edge is reached
-    if (summaryFlower) {
-      viewMode = resultsScreen; 
-      console.log('finished');
-      
-    }
-  }
-}
-/*
+let lastCapturedData = []; // Array to store the last captured sensor values
+
 // This function captures sensor data if any sensor value is greater than 0.
 // It checks each sensor value and if any value is positive, 
 // it adds a copy of the current sensor values to the capturedData array.
-function captureData() {
-  if (sensors.some(sensor => sensor > 0)) {
-    capturedData.push([...sensors]);
-  }
-}*/let lastCapturedData = []; // Array to store the last captured sensor values
-
 function captureData() {
   // Check if any sensor value is greater than 0
   if (sensors.some(sensor => sensor > 0)) {
@@ -828,7 +785,6 @@ function captureData() {
       //
   }
 }
-
 // Helper function to compare two arrays for equality
 function arraysEqual(arr1, arr2) {
   if (arr1.length !== arr2.length) return false; // Check length
@@ -839,7 +795,7 @@ function arraysEqual(arr1, arr2) {
 }
 
 
-
+/*
 function calculateSummary() {
   let sums = new Array(sensors.length).fill(0);
 
@@ -863,9 +819,8 @@ function calculateSummary() {
     console.log(`Sensor ${i}:`, sensorData.length);
   }
   */
-  
-}
-
+/*}*/
+/*
 function drawLargeSummaryFlower() {
   push();
   translate(width / 2, height / 2);
@@ -890,6 +845,7 @@ function drawLargeSummaryFlower() {
   
   pop();
 }
+ */
 
 function drawDataStar() {
   background(backgroundColor)
@@ -976,9 +932,6 @@ function drawLegend() {
   text("Below average", legendX + 110, legendY + 60);
 }
 
-
-
-///MAIN SCENE
 
 function drawWaveformGarden() {
   // Ensure waveHeight is defined before using it
@@ -1082,6 +1035,38 @@ function drawDataWaves(dataToUse, startY, distance, startHue) {
 
 
 
+function drawLineGraph() {
+  const maxGraphHeight = height*0.1; // Set a maximum height for the graph
+  const graphHeight = min(height * 0.5, maxGraphHeight); // Constrain the graph height
+  const graphWidth = width; // Full width of the canvas
+  const leftMargin = width*0.01; // Left margin for the graph
+  const rightMargin = width*0.01; // Right margin for the graph
+  const bottomMargin = height*0.03; // Bottom margin for the graph
+
+  // Draw bounding box
+  stroke(0,0,80,50);
+  strokeWeight(0.5);
+  noFill();
+  rect(leftMargin, height - graphHeight*1.2 - bottomMargin, graphWidth - leftMargin - rightMargin, (graphHeight * 1.25));
+
+  // Draw the line graph for each sensor
+  for (let i = 0; i < totalInputs; i++) { 
+      beginShape();
+      for (let j = 0; j < capturedData.length; j++) {
+        stroke(i * 30 % 360, 100, 100, map(capturedData[j][i],0,360,30,80) ); // Set color based on sensor index
+        strokeWeight(map(capturedData[j][i],0,360,1,4));
+          const x = map(j, 0, capturedData.length-1, leftMargin, graphWidth - rightMargin);
+          const y = map(capturedData[j][i],-10, 350, height - bottomMargin, height - graphHeight - bottomMargin);
+          curveVertex(x, y);
+      }
+      endShape();
+  }
+}
+
+
+
+
+
 
 function drawTree(x, y, size, hue) {
   push();
@@ -1119,14 +1104,14 @@ function drawWaveformLegend() {
 runOnce = false;
 
 // New function to draw circular line graphs
-function drawCircularLineGraph() {
+function drawCircularLineGraph(x,y,max) {
 
   background(backgroundColor)
 
   const totalSensors = totalInputs;//sensors.length; // Total number of sensors
-  const centerX = width *0.4;//width *0.15;  //  width / 2; // X center of the concentric rings
-  const centerY = height/2;//height * 0.2; //height / 2; // Y center of the concentric rings
-  const maxRadius = min(width, height) * 0.4;//0.15; // Maximum radius for the outermost ring 0.4 for full
+  const centerX = x;//width *0.4;//width *0.15;  //  width / 2; // X center of the concentric rings
+  const centerY = y;//height/2;//height * 0.2; //height / 2; // Y center of the concentric rings
+  const maxRadius = min(width, height) * max;//0.15; // Maximum radius for the outermost ring 0.4 for full
   const ringSpacing = maxRadius / totalSensors; // Equal spacing for each sensor ring
   //BLEND MODES
 
@@ -1175,11 +1160,11 @@ if(debugMode){
   runOnce = true;
 }
 
-function drawCapturedDataPie() {
+function drawCapturedDataPie(x,y,max) {
   const totalInputs = sensors.length; // Total number of inputs
-  const centerX = width *0.9;  //  width / 2; // X center of the concentric rings
-  const centerY = height * 0.2; //height / 2; // Y center of the concentric rings
-  const radius = min(width, height) * 0.10; // Maximum radius for the outermost ring 0.4 for full
+  const centerX = x;//width *0.9;  //  width / 2; // X center of the concentric rings
+  const centerY = y;//height * 0.2; //height / 2; // Y center of the concentric rings
+  const radius = min(width, height) * max;//0.10; // Maximum radius for the outermost ring 0.4 for full
   
   // Calculate the average value for each sensor
   const averages = sensors.map((_, i) => {
@@ -1217,26 +1202,20 @@ function refreshColors(averagesList) {
 }
 
 //declare global
-let averages =[];
+
 
 function drawResultsScreen() {
 
   background(backgroundColor)
 
-    const totalSensors = sensors.length; // Total number of sensors
-    const gridCols = 2; // Number of columns in the grid
-    const gridRows = Math.ceil(totalSensors / gridCols); // Calculate rows based on sensors
-    const cellWidth = width / gridCols; // Width of each cell
-    const cellHeight = height / gridRows; // Height of each cell
+  const totalSensors = sensors.length; // Total number of sensors
 
-    // Calculate averages for each sensor
-    // Calculate averages for each sensor
     // Calculate the average value for each sensor
     // `sensors.map` iterates over each sensor, and for each sensor:
     // 1. `capturedData.map(data => data[i])` extracts the data for the current sensor across all captured data points.
     // 2. `sensorData.reduce((sum, value) => sum + value, 0)` sums up all the values for the current sensor.
     // 3. The sum is then divided by the number of data points (`sensorData.length`) to get the average value for the current sensor.
-   
+ 
     averages = sensors.map((_, i) => {
         const sensorData = capturedData.map(data => data[i]);
         return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;      
@@ -1248,34 +1227,18 @@ function drawResultsScreen() {
     // Find the sensor with the highest average
     const highestAverage = Math.max(...averages);
     const highestSensorIndex = averages.indexOf(highestAverage);
-
+    
+     //brushMode = true;
     // Draw visualizations in a grid
     for (let i = 0; i < totalSensors; i++) {
-        const col = i % gridCols; // Column index
-        const row = Math.floor(i / gridCols); // Row index
-        const x = col * cellWidth; // X position
-        const y = row * cellHeight; // Y position
-
-        // Generate random positions within the square
-        
-        const squareSize = min(width, height) / 4; // Size of the square
-        const randomX = random(squareSize / 2, width - squareSize / 2);
-        const randomY = random(squareSize / 2, height - squareSize / 2);
-      
-        const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
-        const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
-        
         //draw becky blobs randomnly onscreen 
-        //brushMode = true;
-        drawCircularLineGraphForSensor(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
+       
+        drawBeckyMode(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
 
       }
 
    
 }
-let noRedraw= true;
-
-
 
 function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
   window.hslColorValues = generateColorRamp({
@@ -1292,7 +1255,8 @@ function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
   });
 }
 
-function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, average, highlightIndex, rotation,brushMode) {
+
+function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex, rotation,brushMode) {
 
   const numSensors = totalInputs; // Number of sensors
   const boxWidth = window.width/totalInputs; // Width of each box
@@ -1320,10 +1284,10 @@ function drawCircularLineGraphForSensor(sensorIndex, x, y, width, height, averag
   rotate(rotation); // Apply rotation
   const radius = min(width, height) / 2; // Radius for the graph
 
-  // Set color based on whether this is the highest average
+  // Set color based on whether this is tbhe highest average
   //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
   //const colorHue = average; // Set hue based on the average value of each sensor (0-360)
-
+  
 
   if(brushMode)
     {
