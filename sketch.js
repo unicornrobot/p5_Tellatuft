@@ -82,6 +82,9 @@ let summaryData = 0;
 let waveHeight; // Declare waveHeight as a global variable
 let averages =[];
 
+let isReadingData = true; // Flag to control data reading
+
+
 let myFont; // Variable to hold the font
 
 function preload() {
@@ -185,6 +188,10 @@ function saveDataToLocalStorage() {
 
 // when data is received in the serial buffer
 function gotData() {
+
+  if (!isReadingData) return; // If not reading data, exit the function
+
+
   let currentString = serial.readLine(); // store the data in a variable
   //trim(currentString); // get rid of whitespace
   if (!currentString) return; // if there's nothing in there, ignore it
@@ -239,7 +246,6 @@ function draw() {
       break;
     case 5:
       drawDashboard();
-      
 
       //drawResultsScreen(); //Becky mode
       break;
@@ -423,6 +429,7 @@ function keyPressed() {
 
   if (key === 'b' || key === 'B') { //back to data capture
     capturedData = [];//reset data
+
     if(viewMode=6){viewMode=4;verticalOffset = 0;dashDrawOnce=false};
   }
   if (key == "p") {
@@ -434,13 +441,12 @@ function keyPressed() {
   }
   if (key === 'v' || key === 'V') {
     viewMode = (viewMode + 1) % 7; // Now cycles through 6 views
+
     if (viewMode === 4) {
       // Reset capture for summary flower view
       capturedData = [];
       isCapturing = true;
-      summaryFlower = null;
-      
-      flowerX = 0;
+
     }
   }
   if (key === '+' || key === '=') {
@@ -1202,20 +1208,20 @@ if(brushMode){noLoop()}; //KILLS THE SCRIPT DEAD - NOT IDEAL - NO MORE INTERACTI
 /////////////////////////
 ///////DASHBOARD MODE ////
 ////////////////////////////
-
+//COMBINED LINE GRAPHS
 function drawLineGraph(max) {
   const maxGraphHeight = max; // Set a maximum height for the graph
-  const graphHeight = min(height * 0.5, maxGraphHeight); // Constrain the graph height
+  const graphHeight = min(height * 0.8, maxGraphHeight); // Constrain the graph height
   const graphWidth = width; // Full width of the canvas
   const leftMargin = width*0.01; // Left margin for the graph
   const rightMargin = width*0.01; // Right margin for the graph
-  const bottomMargin = height*0.03; // Bottom margin for the graph
+  const bottomMargin = height*0.3; //0.03 = bottom //  Bottom margin for the graph
 
   // Draw bounding box
   stroke(0,0,80,50);
   strokeWeight(0.5);
   noFill();
-  rect(leftMargin, height - graphHeight*1.2 - bottomMargin, graphWidth - leftMargin - rightMargin, (graphHeight * 1.25));
+  //rect(leftMargin, height - graphHeight*1.2 - bottomMargin, graphWidth - leftMargin - rightMargin, (graphHeight * 1.25));
 
   // Draw the line graph for each sensor
   for (let i = 0; i < totalInputs; i++) { 
@@ -1377,13 +1383,16 @@ function drawConcentricArcs(x,y,max) {
 }
 
 function drawSensorBoxesAndBars() {
-  const padding = 30;
+  const padding = width * 0.03;
   const boxWidth = (width - (totalInputs + 1) * padding) / totalInputs; // Calculate box width based on padding and total inputs
   const boxHeight = height * 0.03; // Set a fixed height for the boxes
+  const offset = padding * 0.7;
+  textSize(width * 0.009);
 
   for (let i = 0; i < totalInputs; i++) {
+
     const x = padding + i * (boxWidth + padding); // Calculate x position for each box
-    const y = height *0.75 - padding; // Position the boxes at the bottom with padding
+    const y = height *0.98 - padding; //0.75 = centre //  Position the boxes at the bottom with padding
 
     // Draw the sensor value inside the box
    // const sensorData = capturedData.map(data => data[i]);
@@ -1407,27 +1416,27 @@ function drawSensorBoxesAndBars() {
 
     //boxWidth =   boxWidth*0.5;
     
-    rect(x, y, boxWidth*0.2, boxHeight);
+    rect(x, y-(offset), boxWidth, boxHeight);
     
     //text color
     fill(0,90,0); //0,0,100 -white
     textAlign(LEFT,CENTER);
     //text(round(averages[i]), x + boxWidth / 2, y + boxHeight / 2); // Display the average value in the center of the box
-    text(round(averages[i]), x + (boxWidth*0.03), y + boxHeight / 2); // Display the average value in the center of the box
+    text(round(averages[i]), x + (boxWidth*0.03), y -(offset) + boxHeight / 2); // Display the average value in the center of the box
     
 
     //LINE GRAPH
     // Draw a small line graph for each sensor data within a thin outline
-    const graphWidth = boxWidth * 0.4; // Set the width for the small line graph
+    const graphWidth = boxWidth- (padding *0.7) //-(boxWidth*0.3)//* 0.4; // Set the width for the small line graph
     const graphHeight = boxHeight; // Set the height for the small line graph
-    const graphX = x + (boxWidth  * 0.2); // Center the graph horizontally within the box
-    const graphY = y  // Position the graph above the box with padding
+    const graphX = x + (padding*0.7)//+ (boxWidth  * 0.2); // Center the graph horizontally within the box
+    const graphY = y - (offset)  // Position the graph above the box with padding
 
     // Draw the outline for the graph
     noFill();
-    stroke(0, 0, 50); // Set stroke color to white
+    stroke(0, 50, 0); // Set stroke color to white
     strokeWeight(1); // Set stroke weight
-    rect(graphX, graphY, graphWidth, graphHeight); // Draw the outline
+    //rect(graphX, graphY, graphWidth, graphHeight); // Draw the outline
 
     // Draw the line graph
     beginShape();
@@ -1441,9 +1450,9 @@ function drawSensorBoxesAndBars() {
 
     //PIE CHART
     // Draw a pie chart for each sensor average next to the boxes
-    const pieChartRadius = boxWidth * 0.2; // Set the radius for the pie chart
-    const pieX = x + (+boxWidth*0.6) + padding; // Position the pie chart to the right of the box
-    const pieY = y + boxHeight / 2; // Center the pie chart vertically with the box
+    const pieChartRadius = boxWidth * 0.25; // Set the radius for the pie chart
+    const pieX = x + boxWidth*0.5; // Position the pie chart to the right of the box
+    const pieY = y - (offset) + boxHeight * 2; // Center the pie chart vertically with the box
 
     // Draw the pie chart
     noStroke();
@@ -1458,8 +1467,6 @@ function drawSensorBoxesAndBars() {
     
 
 
-    
-    
     //BARS
     // Draw a bar graph for each data item, placed higher than the boxes
     const barGraphHeight = height * 0.2; // Set a fixed height for the bar graph
@@ -1498,6 +1505,9 @@ let dashDrawOnce = false;
 function drawDashboard(){
 if(!dashDrawOnce){
 
+isCapturing = false;
+if(debugMode){console.log(capturedData)};
+
     averages = sensors.map((_, i) => {
     const sensorData = capturedData.map(data => data[i]);
     return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;});
@@ -1516,7 +1526,7 @@ if(!dashDrawOnce){
     
     drawSensorLineRipples(width*0.5,height*0.27,0.10);//x,y,max
 
-    drawLineGraph(height*0.15); //max
+    drawLineGraph(height*0.20); //max
 
     drawConcentricArcs(width*0.8, height*0.27, 0.3);//x,y,max
 
