@@ -1210,32 +1210,33 @@ if(brushMode){noLoop()}; //KILLS THE SCRIPT DEAD - NOT IDEAL - NO MORE INTERACTI
 ////////////////////////////
 //COMBINED LINE GRAPHS
 function drawLineGraph(max) {
-  const maxGraphHeight = max; // Set a maximum height for the graph
+  const maxGraphHeight = height*0.10;//max; // Set a maximum height for the graph
   const graphHeight = min(height * 0.8, maxGraphHeight); // Constrain the graph height
   const graphWidth = width; // Full width of the canvas
-  const leftMargin = width*0.01; // Left margin for the graph
-  const rightMargin = width*0.01; // Right margin for the graph
-  const bottomMargin = height*0.3; //0.03 = bottom //  Bottom margin for the graph
+  const leftMargin = width * 0.01; // Left margin for the graph
+  const rightMargin = width * 0.01; // Right margin for the graph
+  const topMargin = height * 0.01; // Top margin for the graph
 
   // Draw bounding box
-  stroke(0,0,80,50);
+  stroke(0, 0, 80, 50);
   strokeWeight(0.5);
   noFill();
-  //rect(leftMargin, height - graphHeight*1.2 - bottomMargin, graphWidth - leftMargin - rightMargin, (graphHeight * 1.25));
+  //rect(leftMargin, topMargin, graphWidth - leftMargin - rightMargin, graphHeight);
 
   // Draw the line graph for each sensor
-  for (let i = 0; i < totalInputs; i++) { 
-      beginShape();
-      for (let j = 0; j < capturedData.length; j++) {
-        stroke(i * 30 % 360, 100, 100, map(capturedData[j][i],0,360,30,80) ); // Set color based on sensor index
-        strokeWeight(map(capturedData[j][i],0,360,1,4));
-          const x = map(j, 0, capturedData.length-1, leftMargin, graphWidth - rightMargin);
-          const y = map(capturedData[j][i],-10, 350, height - bottomMargin, height - graphHeight - bottomMargin);
-          curveVertex(x, y);
-      }
-      endShape();
+  for (let i = 0; i < totalInputs; i++) {
+    beginShape();
+    for (let j = 0; j < capturedData.length; j++) {
+      stroke(i * 30 % 360, 100, 100, map(capturedData[j][i], 0, 360, 30, 80)); // Set color based on sensor index
+      strokeWeight(map(capturedData[j][i], 0, 360, 1, 4));
+      const x = map(j, 0, capturedData.length - 1, leftMargin, graphWidth - rightMargin);
+      const y = map(capturedData[j][i], -10, 350, topMargin, topMargin + graphHeight);
+      curveVertex(x, y);
+    }
+    endShape();
   }
 }
+
 function drawCircularLineGraph(x,y,max) {
 
   background(backgroundColor)
@@ -1522,13 +1523,14 @@ if(debugMode){console.log(capturedData)};
 
     //draw once
     dashDrawOnce = true;   
-    drawCircularLineGraph(width*0.2, height*0.27 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
-    
-    drawSensorLineRipples(width*0.5,height*0.27,0.10);//x,y,max
-
+    drawCircularLineGraph(width*0.2, height*0.4 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+                          //width*0.2, height*0.27 ,0.08
+    drawSensorLineRipples(width*0.5,height*0.4,0.10);//x,y,max
+                        //width*0.5,height*0.27,0.10
     drawLineGraph(height*0.20); //max
 
-    drawConcentricArcs(width*0.8, height*0.27, 0.3);//x,y,max
+    drawConcentricArcs(width*0.8, height*0.4, 0.3);//x,y,max
+                      //width*0.8, height*0.27, 0.3
 
     drawSensorBoxesAndBars();
 
