@@ -116,14 +116,9 @@ function setup() {
   background(0,0,32);//grey
 
   generateRandomPalettes();
-
-  
   
   textFont(myFont); // Set the loaded font
   textSize(32);
-
-  
-
   noFill()
 
   //strokeWeight(3)
@@ -135,11 +130,6 @@ function setup() {
     .then(onMidiEnabled)
     .catch(err => alert(err));
   
-  
-  
- 
-
-
   sunColor = color(60, 100, 100, 10);
    
   // serial constructor
@@ -603,9 +593,12 @@ function generateRandomPalettes() {
           let saturation = random(50, 100);
           let lightness = random(30, 70);
           palette.push(color(hue, saturation, lightness));
+          
       }
       palettes.push(palette);
   }
+
+  if(debugMode){accessHSLValues()};
 }
 
 function displayPalettes() {
@@ -635,8 +628,8 @@ function displayPalettes() {
 
       // Draw a white border around the selected palette
       if (selectedPaletteIndex === i+1) { // Correctly check if this palette is selected
-        strokeWeight(10); // Set stroke weight for the border
-        stroke(255); // Set stroke color to white
+        strokeWeight(5); // Set stroke weight for the border
+        stroke(0,0,70); // Set stroke color to white
         noFill(); // Ensure no fill for the border
         rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette
       } else {
@@ -644,8 +637,19 @@ function displayPalettes() {
       }
     
   }
+}
 
+function accessHSLValues() {
+  // Example: Access the HSL values of the first color in the first palette
+  const paletteIndex = 7; // First palette
+  const colorIndex = 7; // First color in the palette
 
+  const selectedColor = palettes[paletteIndex][colorIndex]; // Get the color object
+  const h = round(hue(selectedColor)); // Get the hue
+  const s = round(saturation(selectedColor)); // Get the saturation
+  const l = round(lightness(selectedColor)); // Get the lightness
+
+  console.log(`HSL Values of Palette ${paletteIndex + 1}, Color ${colorIndex + 1}: H=${h}, S=${s}, L=${l}`);
 }
 
 
@@ -722,6 +726,14 @@ function drawWeave() {
     //HUE PICKED FROM A SELECTED PALETTE
     //fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
    
+    //HUE PICKED BY CHOSEN GLOBAL PALETTE
+  const selectedColor = palettes[selectedPaletteIndex][i]; // Get the color object
+  const h = round(hue(selectedColor)); // Get the hue
+  const s = round(saturation(selectedColor)); // Get the saturation
+  const l = round(lightness(selectedColor)); // Get the lightness
+
+  fill(h,s,l);
+
     //draw the boxes
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     
