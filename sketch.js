@@ -59,7 +59,7 @@ let sunAlpha = 50;
 let toggleOutline = false;
 
 let viewMode
-let startScreen = 4; // 4 is weave drawing
+let startScreen = 7; // 4 is weave drawing
 let resultsScreen = 5;// (used if captureMode = fixed/continous) 5 = beckymode - 6 = circulrgraph
 
 
@@ -95,15 +95,29 @@ function preload() {
 }
 
 
+//PALLETES
+let palettes = [];
+let selectedPaletteIndex = 0;
+const totalPalettes = 8;
+const colorsPerPalette = 8;
+let globalPalette;
+
+
+
+
 ////SETUP//////
 
 function setup() {
   createCanvas(windowWidth, windowHeight,WEBGL);
   //fullscreen();
+  frameRate(30);
+
   colorMode(HSB,360,100,100,100)
   background(0,0,32);//grey
 
-  frameRate(30);
+  generateRandomPalettes();
+
+  
   
   textFont(myFont); // Set the loaded font
   textSize(32);
@@ -111,7 +125,9 @@ function setup() {
   
 
   noFill()
-  strokeWeight(3)
+
+  //strokeWeight(3)
+  //noStroke();
     vel = TWO_PI / 300
 
     WebMidi
@@ -256,7 +272,10 @@ function draw() {
       drawWaveformGarden();
       break;v
     case 7:
-      drawPaletteSelection();
+      //drawPaletteSelection();
+      noStroke();
+
+      displayPalettes();
       break;
   }
 
@@ -422,12 +441,27 @@ function keyPressed() {
     displayInfo = !displayInfo;
     }
 
+    /*
     if (key === '0' ){viewMode=0;}
     if (key === '1' ){viewMode=1;}
     if (key === '2' ){viewMode=2;}
     if (key === '3' ){viewMode=3;}
     if (key === '4' ){viewMode=4;}
     if (key === '5' ){viewMode=5;}
+    if (key === '6' ){viewMode=6;}
+    if (key === '7' ){viewMode=7;}
+    */
+
+    if (key >= '1' && key <= '8') {
+      selectedPaletteIndex = int(key); // Update selected palette index
+      console.log(selectedPaletteIndex)
+    } 
+
+  if (key === 'l' || key === 'L') {
+    setGlobalPalette();
+    //console.log(palette)
+    }   
+    
   
 
   if (key === 'b' || key === 'B') { //back to data capture
@@ -537,8 +571,6 @@ function drawGeometricAnimations() {
   }
 }
 //
-
-
 function polygon(x, y, radius, npoints) {
   let angle = TWO_PI / npoints;
   beginShape();
@@ -561,15 +593,76 @@ ellipse(x,y+sensorData,10,10)
 }
 
 
-let palettes = [
-   /* Name */[[0, 100, 100], [45, 100, 100], [90, 100, 100], [135, 100, 100], [180, 100, 100], [225, 100, 100], [270, 100, 100], [315, 100, 100]],
-   /* Name */[[30, 100, 100], [60, 100, 100], [90, 100, 100], [120, 100, 100], [150, 100, 100], [180, 100, 100], [210, 100, 100], [240, 100, 100]],
-   /* Name */[[15, 100, 100], [75, 100, 100], [135, 100, 100], [195, 100, 100], [255, 100, 100], [315, 100, 100], [15, 50, 100], [75, 50, 100]]
-];
+//Palettes
 
-let selectedPalette = palettes[0]; // Default palette
+function generateRandomPalettes() {
+  for (let i = 0; i < totalPalettes; i++) {
+      let palette = [];
+      for (let j = 0; j < colorsPerPalette; j++) {
+          let hue = random(360);
+          let saturation = random(50, 100);
+          let lightness = random(30, 70);
+          palette.push(color(hue, saturation, lightness));
+      }
+      palettes.push(palette);
+  }
+}
 
-function drawPaletteSelection() {
+function displayPalettes() {
+  background(backgroundColor);
+  noStroke();
+  const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
+  const paletteHeight = 50; // Adjusted height for each palette block
+  const margin = width * 0.09; // Adjusted margin between palettes
+  const startX = margin; // Starting X position
+  const startY = height - (paletteHeight + margin) * 4.5; // Starting Y position for 4 rows
+
+  for (let i = 0; i < 8; i++) { // Limit to display 4 rows of 2 palettes
+    noStroke();
+    const col = i % 2; // Column index (0 or 1)
+    const row = floor(i / 2); // Row index (0 to 3)
+
+    // Calculate position for each palette block
+    const x = startX + col * (width / 2);
+    const y = startY + (paletteHeight + margin) * row;
+
+    // Draw each color in the palette
+    for (let j = 0; j < colorsPerPalette; j++) {
+      noStroke(0)
+      fill(palettes[i][j]);
+      rect(x + j * paletteWidth, y, paletteWidth, paletteHeight); // Draw color block
+    }
+
+      // Draw a white border around the selected palette
+      if (selectedPaletteIndex === i+1) { // Correctly check if this palette is selected
+        strokeWeight(10); // Set stroke weight for the border
+        stroke(255); // Set stroke color to white
+        noFill(); // Ensure no fill for the border
+        rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette
+      } else {
+        noStroke(); // Ensure no stroke for non-selected palettes
+      }
+    
+  }
+
+
+}
+
+
+
+function setGlobalPalette() {
+  // Set the global palette color for use in the sketch
+  globalPalette = palettes[selectedPaletteIndex];
+  console.log(palettes[selectedPaletteIndex]);
+  // Example usage: fill(globalPalette[0]); // Use the first color of the selected palette
+}
+
+
+
+
+//let selectedPalette = palettes[0]; // Default palette
+
+/*function drawPaletteSelection() {
   const gap = 40; // Define the gap between palettes
   const barWidth = width * 0.5 / palettes[0].length; // 50% of the width for all bars
   const barHeight = height * 0.1; // 10% of the height for each bar
@@ -583,7 +676,7 @@ function drawPaletteSelection() {
       rect(startX + j * barWidth, startY, barWidth, barHeight);
     }
   }
-}
+}*/
 
 
 //////////////////////
