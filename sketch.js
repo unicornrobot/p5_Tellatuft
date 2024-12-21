@@ -83,6 +83,7 @@ let waveHeight; // Declare waveHeight as a global variable
 let averages =[];
 
 let isReadingData = true; // Flag to control data reading
+let runOnce = false;
 
 
 let myFont; // Variable to hold the font
@@ -101,6 +102,8 @@ function setup() {
   //fullscreen();
   colorMode(HSB,360,100,100,100)
   background(0,0,32);//grey
+
+  frameRate(30);
   
   textFont(myFont); // Set the loaded font
   textSize(32);
@@ -199,7 +202,7 @@ function gotData() {
   latestData = currentString; // save it to the global variable
 
   //DEBUG
-  if(debugMode){console.log(currentString)}
+  //if(debugMode){console.log(currentString)}
   //seperate values in the array
   let splitVal = splitTokens(currentString, ',');
 
@@ -647,12 +650,18 @@ function drawWeave() {
       fill(255);
       textSize(12);
       textAlign(LEFT, TOP);
+
+      console.log(sensors.toString());
+
      // console.log(`thread width: ${round(boxHeight)}`, width-120, height - 60);
       //console.log(`weave speed: ${round(mappedControllerValues[2])}`, width-120, height - 40);
       //console.log(`brightness: ${round(mappedControllerValues[3])}`, width-120, height - 20);
+
+      /*
       console.log(`thread width: ${round(boxHeight)}`);
       console.log(`weave speed: ${round(mappedControllerValues[2])}`);
       console.log(`brightness: ${round(mappedControllerValues[3])}`);
+      */
     }
 
 
@@ -1265,7 +1274,7 @@ blendMode(BLEND)
      fill(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
       noStroke();
     }else{
-      strokeWeight(map(mappedControllerValues[3],0,360,1,20))
+      strokeWeight(3)
       stroke(colorHue, 100, 100, alpha); // stroke color based on mapped controller value
       fill(colorHue, 100, 100, 10); // stroke color based on mapped controller value
 
@@ -1429,7 +1438,7 @@ function drawSensorBoxesAndBars() {
     //LINE GRAPH
     // Draw a small line graph for each sensor data within a thin outline
     const graphWidth = boxWidth- (padding *0.7) //-(boxWidth*0.3)//* 0.4; // Set the width for the small line graph
-    const graphHeight = boxHeight; // Set the height for the small line graph
+    const graphHeight = boxHeight-(boxHeight*0.01); // Set the height for the small line graph
     const graphX = x + (padding*0.7)//+ (boxWidth  * 0.2); // Center the graph horizontally within the box
     const graphY = y - (offset)  // Position the graph above the box with padding
 
@@ -1444,7 +1453,7 @@ function drawSensorBoxesAndBars() {
     for (let j = 0; j < capturedData.length; j++) {
         const sensorValue = capturedData[j][i]; // Get the data value for the current sensor
         const xPos = map(j, 0, capturedData.length - 1, graphX, graphX + graphWidth); // Map the x position
-        const yPos = map(sensorValue, 0, 360, graphY + graphHeight, graphY); // Map the y position
+        const yPos = map(sensorValue, 0, 360, graphY + graphHeight-(boxHeight*0.1), graphY+(boxHeight*0.1)); // Map the y position
         vertex(xPos, yPos); // Add vertex to the shape
     }
     endShape();
@@ -1525,11 +1534,11 @@ if(debugMode){console.log(capturedData)};
     dashDrawOnce = true;   
     drawCircularLineGraph(width*0.2, height*0.4 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
                           //width*0.2, height*0.27 ,0.08
-    drawSensorLineRipples(width*0.5,height*0.4,0.10);//x,y,max
+    drawSensorLineRipples(width*0.8,height*0.4,0.10);//x,y,max
                         //width*0.5,height*0.27,0.10
     drawLineGraph(height*0.20); //max
 
-    drawConcentricArcs(width*0.8, height*0.4, 0.3);//x,y,max
+    drawConcentricArcs(width*0.5, height*0.4, 0.4);//x,y,max
                       //width*0.8, height*0.27, 0.3
 
     drawSensorBoxesAndBars();
