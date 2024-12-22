@@ -62,6 +62,7 @@ let toggleOutline = false;
 
 let viewMode
 let startScreen = 7; // 4 is weave drawing // 7 is palette choice.
+let captureScreen = 4;
 let resultsScreen = 5;// (used if captureMode = fixed/continous) 5 = beckymode - 6 = circulrgraph
 
 
@@ -99,10 +100,11 @@ function preload() {
 
 //PALETTES
 let palettes = [];
-let selectedPaletteIndex = 5; //(1-8)
+let selectedPaletteIndex = 1; //(1-8)
 const totalPalettes = 8;
 const colorsPerPalette = 8;
-let globalPalette;
+//let globalPalette;
+let currentPalette = []; // Global variable for the current palette
 
 
 
@@ -418,45 +420,53 @@ function windowResized() {
   resetView();
 }
 
+//  s = startscreen
+//  c = capture
+//  r = results
+//-------------
+//  d = debug
+//  v = cycle through modes
+//  a = save screenshot
+//  b = reset weave
 function keyPressed() {
 
-  if (key === 'f' || key === 'F') { // Press 'f' for full screen
+   if (key === 'f' || key === 'F') { // Press 'f' for full screen
     let fs = fullscreen();
     fullscreen(!fs);
-  }
+    }
 
 
-  if (key === 's' || key === 'S') { // Press 'S' to save data
-    saveDataToLocalStorage();
+   if (key === 'a' || key === 'A') { // Press 'A' to save data
+    //saveDataToLocalStorage();
     saveCanvas('weave_' + Date.now(), 'png');
-  }
+    }
 
-  if (key === 'i' || key === 'I') { // Press 'i' to show info
+    if (key === 'i' || key === 'I') { // Press 'i' to show info
     displayInfo = !displayInfo;
     }
 
-    /*
-    if (key === '0' ){viewMode=0;}
-    if (key === '1' ){viewMode=1;}
-    if (key === '2' ){viewMode=2;}
-    if (key === '3' ){viewMode=3;}
-    if (key === '4' ){viewMode=4;}
-    if (key === '5' ){viewMode=5;}
-    if (key === '6' ){viewMode=6;}
-    if (key === '7' ){viewMode=7;}
-    */
+  
 
     if (key >= '1' && key <= '8') {
       selectedPaletteIndex = int(key); // Update selected palette index // -1 is needed to map index to palette number (0=1)
       console.log(`Palette Selected: ${selectedPaletteIndex}`); // Log the selected palette
-
+      //viewMode(key)
     } 
 
-  if (key === 'l' || key === 'L') {
+    //CAPTURE SCREEN//
+    if (key === 'c' || key === 'C') {
     setGlobalPalette();
-    viewMode = 4;
+    capturedData = []; //clear out the dataset for next time.
+    viewMode = captureScreen;
     //console.log(palette)
-    }   
+    } else if (key === 'r' || key === 'R') {
+      viewMode = resultsScreen; }
+
+    if (key === 's' || key === 'S') { // Press 'A' to save data
+      viewMode = startScreen;
+     }
+
+
     
   
 
@@ -591,6 +601,15 @@ ellipse(x,y+sensorData,10,10)
 
 //Palettes
 
+function getColorFromPalette(index) {
+  const selectedColor = currentPalette[index];
+  return {
+      h: hue(selectedColor),
+      s: saturation(selectedColor),
+      l: lightness(selectedColor),
+  };
+}
+
 function generateRandomPalettes() {
   for (let i = 0; i < totalPalettes; i++) {
       let palette = [];
@@ -663,7 +682,7 @@ function accessHSLValues() {
 
 function setGlobalPalette() {
   // Set the global palette color for use in the sketch
-  globalPalette = palettes[selectedPaletteIndex-1];
+  currentPalette = palettes[selectedPaletteIndex-1];
   //console.log(palettes[selectedPaletteIndex]);
   // Example usage: fill(globalPalette[0]); // Use the first color of the selected palette
 }
@@ -737,7 +756,7 @@ function drawWeave() {
     //HUE PICKED BY CHOSEN GLOBAL PALETTE
     //const selectedColor = palettes[selectedPaletteIndex-1][i]; // Get the color object // (map the index to the palette number)
     
-    const selectedColor = globalPalette[i]; // Get the color object // (map the index to the palette number)
+    const selectedColor = currentPalette[i]; // Get the color object // (map the index to the palette number)
 
     const h = round(hue(selectedColor)); // Get the hue
     const s = round(saturation(selectedColor)); // Get the saturation
@@ -1220,6 +1239,10 @@ function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
 
 function drawResultsScreen() {
 
+  //reset things
+  verticalOffset = 0; //used to reset the weave
+  
+
   background(backgroundColor)
 
   const totalSensors = sensors.length; // Total number of sensors
@@ -1238,22 +1261,16 @@ function drawResultsScreen() {
     const highestAverage = Math.max(...averages);
     const highestSensorIndex = averages.indexOf(highestAverage);
 
-   
-     //brushMode = true;
-    // Draw visualizations in a grid
-    for (let i = 0; i < totalSensors; i++) {
 
+    for (let i = 0; i < totalSensors; i++) {
        //Offsets
     const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
     const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
-        
-    
         //draw becky blobs randomnly onscreen 
         drawBeckyMode(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
-
       }
 
-   
+     
 }
 
 function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex, rotation,brushMode) {
