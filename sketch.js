@@ -60,13 +60,14 @@ let sunAlpha = 50;
 
 let toggleOutline = false;
 
-let viewMode
+
 let startScreen = 7; // 4 is weave drawing // 7 is palette choice.
 let captureScreen = 4;
 let resultsScreen = 5;// (used if captureMode = fixed/continous) 5 = beckymode - 6 = circulrgraph
 
+let viewMode = startScreen;
 
-if (offlineMode){viewMode = 5;} else {viewMode = startScreen;}
+//if (offlineMode){viewMode = 5;} else {viewMode = startScreen;}
 
  // 0: Debug, 1: Live Graphs, 2: Geometric Animations, 3: Flower Garden, 4: Summary Flower 5: wavegarden 
 
@@ -107,8 +108,6 @@ const colorsPerPalette = 8;
 let currentPalette = []; // Global variable for the current palette
 
 
-
-
 ////SETUP//////
 
 function setup() {
@@ -119,7 +118,8 @@ function setup() {
   colorMode(HSB,360,100,100,100)
   background(0,0,32);//grey
 
-  generateRandomPalettes();
+  //generateRandomPalettes();
+  generateRandomColorRamps();
   
   textFont(myFont); // Set the loaded font
   textSize(32);
@@ -168,6 +168,58 @@ function setup() {
   generateSampleData();
 
   waveHeight = height / 20; // Initialize waveHeight based on the canvas height
+}
+
+
+function draw() {
+
+  if (viewMode !== previousViewMode) {
+    resetView();
+    previousViewMode = viewMode;
+  }
+
+  //NEEDED WHEN IN WEBGL MODE
+  translate(-width / 2, -height / 2); // Move the origin to the top-left corner
+  /////////////////////////////
+
+  switch (viewMode) {
+    case 0:
+      drawDebugView();
+      break;
+    case 1:
+      drawLiveGraphs();
+      break;
+    case 2:
+      drawGeometricAnimations();
+      break;
+    case 3:
+      drawFlowerGarden();
+      break;
+    case 4:
+      drawWeave();
+      captureData();
+      //drawSummary();
+      break;
+    case 5:
+
+      //drawDashboard(); //dataviz dashboard
+
+      drawResultsScreen(); //Becky mode
+     
+      break;
+    case 6: 
+      drawWaveformGarden();
+      break;
+    case 7:
+      displayPalettes();
+      break;
+  }
+
+  // Instructions
+  fill(255);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  //text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
 }
 
 // Function to generate sample data
@@ -225,61 +277,6 @@ function gotData() {
     sensors.push(splitVal[i])
     
   }
-}
-
-
-function draw() {
-
-  if (viewMode !== previousViewMode) {
-    resetView();
-    previousViewMode = viewMode;
-  }
-
-  //NEEDED WHEN IN WEBGL MODE
-  translate(-width / 2, -height / 2); // Move the origin to the top-left corner
-  /////////////////////////////
-
-  switch (viewMode) {
-    case 0:
-      drawDebugView();
-      break;
-    case 1:
-      drawLiveGraphs();
-      break;
-    case 2:
-      drawGeometricAnimations();
-      break;
-    case 3:
-      drawFlowerGarden();
-      break;
-    case 4:
-      drawWeave();
-      captureData();
-      //drawSummary();
-      break;
-    case 5:
-
-      //drawDashboard(); //dataviz dashboard
-
-      drawResultsScreen(); //Becky mode
-     
-      break;
-    case 6: 
-      drawWaveformGarden();
-      break;v
-    case 7:
-      //drawPaletteSelection();
-      noStroke();
-
-      displayPalettes();
-      break;
-  }
-
-  // Instructions
-  fill(255);
-  textAlign(LEFT, BOTTOM);
-  textSize(14);
-  //text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
 }
 
 function drawDebugView() {
@@ -342,9 +339,6 @@ function drawDebugView() {
   textSize(24);
   text("Sensor Readings", width / 2, height * 0.05);
 }
-
-// Ensure capturedControllerValues is initialized
-//let capturedControllerValues = []; // Initialize as an empty array
 
 function drawLiveGraphs() {
   const graphHeight = height / 8;
@@ -411,7 +405,7 @@ function mousePressed() {
     //let fs = fullscreen();
     //fullscreen(!fs);
     
-    //generateNewColorRamp();
+    generateRandomColorRamps();
   }
 }
 
@@ -420,6 +414,7 @@ function windowResized() {
   resetView();
 }
 
+//KEY PRESSES///
 //  s = startscreen
 //  c = capture
 //  r = results
@@ -453,18 +448,20 @@ function keyPressed() {
       //viewMode(key)
     } 
 
-    //CAPTURE SCREEN//
+
+    if (key === 's' || key === 'S') { // Press 'A' to save data
+      viewMode = startScreen;
+     }
     if (key === 'c' || key === 'C') {
     setGlobalPalette();
     capturedData = []; //clear out the dataset for next time.
     viewMode = captureScreen;
     //console.log(palette)
-    } else if (key === 'r' || key === 'R') {
+    }
+    if (key === 'r' || key === 'R') {
       viewMode = resultsScreen; }
 
-    if (key === 's' || key === 'S') { // Press 'A' to save data
-      viewMode = startScreen;
-     }
+   
 
 
     
@@ -510,96 +507,10 @@ function keyPressed() {
   }
 }
 
-function drawGeometricAnimations() {
-  // Don't redraw the background
-  // background(0, 0, 32);
 
-  // Set up the layout
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const maxRadius = min(width, height) * 0.4;
-
-  // Draw rotating pentagons
-  for (let i = 0; i < 5; i++) {
-    const angle = frameCount * 0.02 + i * TWO_PI / 5;
-    const x = centerX + cos(angle) * maxRadius * 0.6;
-    const y = centerY + sin(angle) * maxRadius * 0.6;
-    const size = map(sensors[i], 0, 360, 20, 200);
-    const hue = sensors[i];//map(sensors[i], 0, 100, 0, 360);
-    
-    push();
-    translate(x, y);
-    rotate(frameCount * 0.05 + i * TWO_PI / 5);
-    noFill();
-    stroke(hue, 100, 100, 50); // Added transparency
-    strokeWeight(2);
-    polygon(0, 0, size, 5);
-    pop();
-  }
-
-  // Draw staggered lines
-  for (let i = 0; i < 5; i++) {
-    const angle = map(i, 0, 5, 0, TWO_PI);
-    const length = map(sensors[i], 0, 100, 0, maxRadius);
-    const hue = map(sensors[i], 0, 100, 180, 540);
-    
-    push();
-    translate(centerX, centerY);
-    rotate(angle + frameCount * 0.02);
-    stroke(hue % 360, 100, 100, 50); // Added transparency
-    strokeWeight(5);
-    line(0, 0, length, 0);
-    pop();
-  }
-
-  // Draw central circle
-  const avgSensor = sensors.slice(0, totalInputs).reduce((a, b) => a + b, 0) / totalInputs;
-  const centralSize = map(avgSensor, 0, 100, 20, 100);
-  const centralHue = map(avgSensor, 0, 100, 0, 360);
-  
-  noStroke();
-  noFill();
-  //fill(centralHue, 100, 100, 10); // Increased transparency
-  
-  //fill(centralHue, 100, 100, 10); // Increased transparency
-  circle(centerX, centerY, centralSize);
-
-  // Display sensor values
-  if(debugMode){
-  textAlign(LEFT, TOP);
-  textSize(12);
-  fill(1);
-  rect(10,10,50,totalInputs*20);
-  for (let i = 0; i < totalInputs; i++) {
-    fill(i * 72 % 360, 100, 100);
-    text(`S${i}: ${sensors[i]}`, 10, 10 + i * 20);
-  }
-  }
-}
-//
-function polygon(x, y, radius, npoints) {
-  let angle = TWO_PI / npoints;
-  beginShape();
-  for (let a = 0; a < TWO_PI; a += angle) {
-    let sx = x + cos(a) * radius;
-    let sy = y + sin(a) * radius;
-    vertex(sx, sy);
-  }
-  endShape(CLOSE);
-}
-
-function drawWave(waveHeight,colR,colG,colB, sensorData){
-  //background(255)
-let x = frameCount*0.5;
-let y = 10 * sin(x * 0.5);
-//point(x, y);
-fill(colR,colG,colB)
-ellipse(x,y+sensorData,10,10)
-
-}
-
-
-//Palettes
+/////////////
+// PALETTES ///
+/////////////
 
 function getColorFromPalette(index) {
   const selectedColor = currentPalette[index];
@@ -610,6 +521,96 @@ function getColorFromPalette(index) {
   };
 }
 
+
+///RAPENSAU RELATED FUNCTIONS.
+//https://meodai.github.io/rampensau/
+//RAMPENSAU COLOR RAMPS
+function generateRandomColorRamps() {
+  palettes = []; // Clear existing palettes
+
+  for (let i = 0; i < 8; i++) {
+      const palette = generateColorRamp({
+        total: 8,
+        hCenter: Math.random() * 360, 
+        hCycles: Math.random() * 1.5, //1.5
+        sRange: [30, 70],  // 30, 70 
+        sEasing: x => Math.pow(x, 2),
+        lRange: [Math.random() * 30, 75 + Math.random() * 10],
+        lEasing: easings.linear,//x => Math.pow(x, 15),
+      });
+      palettes.push(palette);
+  }
+}
+
+
+
+const easeIn = p => t => Math.pow(t, p)
+const easeOut = p => t => 1 - easeIn(p)(1 - t)
+const easeInOut = p => t => t < .5 ? easeIn(p)(t * 2) / 2 : easeOut(p)(t * 2 - 1) / 2 + .5
+const easings = {
+	linear: easeIn(1),
+	easeInQuad: easeIn(2),
+	easeOutQuad: easeOut(2),
+	easeInOutQuad: easeInOut(2),
+	easeInCubic: easeIn(3),
+	easeOutCubic: easeOut(3),
+	easeInOutCubic: easeInOut(3),
+	easeInQuart: easeIn(4),
+	easeOutQuart: easeOut(4),
+	easeInOutQuart: easeInOut(4),
+	easeInQuint: easeIn(5),
+	easeOutQuint: easeOut(5),
+	easeInOutQuint: easeInOut(5)
+}
+
+
+///EXAMPLE CALL
+/*generateColorRamp({
+  total: 9,
+  hStart: 72.286,
+  hStartCenter: 0.500,
+  hEasing: x => x,
+  hCycles: 1.144,
+  sRange: [0.400, 0.350],
+  sEasing: x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  lRange: [0.082, 0.974],
+  lEasing: x => -(Math.cos(Math.PI * x) - 1) / 2,
+});
+*/
+
+
+
+
+let hasGeneratedColors = false; // Flag to track if colors have been generated
+// Function to refresh colors, called when needed
+function refreshColors(averagesList) {
+  if (!hasGeneratedColors) { // Check if colors have already been generated
+      generateNewColorRamp(averagesList,8); // Generate new colorsb
+      hasGeneratedColors = true; // Set the flag to true
+  }
+}
+
+function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
+  window.hslColorValues = generateColorRamp({
+      huelist: huelist,
+      total: total,                           // number of colors in the ramp
+      hStart: hstart,        // hue at the start of the ramp
+      hCycles: 1,                         // number of full hue cycles 
+      hStartCenter: 0.5,                  // where in the ramp the hue should be centered
+      hEasing: (x, fr) => x,              // hue easing function
+      sRange: [0.4, 0.35],                 // saturation range
+      sEasing: (x, fr) => Math.pow(x, 2), // saturation easing function
+      lRange: [Math.random() * 0.1, 0.9],  // lightness range
+      lEasing: (x, fr) => Math.pow(x, 1.5) // lightness easing function
+  });
+}
+
+
+
+
+
+
+//system random - not so pretty :( ////
 function generateRandomPalettes() {
   for (let i = 0; i < totalPalettes; i++) {
       let palette = [];
@@ -678,35 +679,14 @@ function accessHSLValues() {
   console.log(`HSL Values of Palette ${paletteIndex + 1}, Color ${colorIndex + 1}: H=${h}, S=${s}, L=${l}`);
 }
 
-
-
 function setGlobalPalette() {
   // Set the global palette color for use in the sketch
-  currentPalette = palettes[selectedPaletteIndex-1];
+  currentPalette = palettes[selectedPaletteIndex-1]; //-1 needed for correct array position
   //console.log(palettes[selectedPaletteIndex]);
   // Example usage: fill(globalPalette[0]); // Use the first color of the selected palette
 }
 
 
-
-
-//let selectedPalette = palettes[0]; // Default palette
-
-/*function drawPaletteSelection() {
-  const gap = 40; // Define the gap between palettes
-  const barWidth = width * 0.5 / palettes[0].length; // 50% of the width for all bars
-  const barHeight = height * 0.1; // 10% of the height for each bar
-  const startX = (width - barWidth * palettes[0].length) / 2; // Center horizontally
-
-  for (let i = 0; i < palettes.length; i++) {
-    const totalHeight = palettes.length * barHeight + (palettes.length - 1) * gap;
-    const startY = (height - totalHeight) / 2 + i * (barHeight + gap); // Center vertically
-    for (let j = 0; j < palettes[i].length; j++) {
-      fill(palettes[i][j][0], palettes[i][j][1], palettes[i][j][2]);
-      rect(startX + j * barWidth, startY, barWidth, barHeight);
-    }
-  }
-}*/
 
 
 //////////////////////
@@ -959,31 +939,7 @@ function arraysEqual(arr1, arr2) {
 }
 
 
-/*
-function calculateSummary() {
-  let sums = new Array(sensors.length).fill(0);
 
-  for (let data of capturedData) {
-      //console.log(data.join(", ")); // Output the entire captured data for 1 sensor as a single string
-      for (let i = 0; i < data.length; i++) {
-        sums[i] += data[i]; // Accumulate sums for valid data
-      }
-  }
-
-  // Calculate averages only if there are valid data entries
-  summaryFlower = sums.map(sum => sum / capturedData.length);
-
-
-  if(debugMode){outputCapturedDataLengths()};
-  // Output the final array for each sensor to the console
-  /*
-  console.log("Final Captured Data for Each Sensor:");
-  for (let i = 0; i < sensors.length; i++) {
-    const sensorData = capturedData.map(data => data[i]);
-    console.log(`Sensor ${i}:`, sensorData.length);
-  }
-  */
-/*}*/
 /*
 function drawLargeSummaryFlower() {
   push();
@@ -1208,34 +1164,11 @@ function drawWaveformLegend() {
 }
 
 
-let hasGeneratedColors = false; // Flag to track if colors have been generated
-
-// Function to refresh colors, called when needed
-function refreshColors(averagesList) {
-  if (!hasGeneratedColors) { // Check if colors have already been generated
-      generateNewColorRamp(averagesList,8); // Generate new colorsb
-      hasGeneratedColors = true; // Set the flag to true
-  }
-}
-
-function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
-  window.hslColorValues = generateColorRamp({
-      huelist: huelist,
-      total: total,                           // number of colors in the ramp
-      hStart: hstart,        // hue at the start of the ramp
-      hCycles: 1,                         // number of full hue cycles 
-      hStartCenter: 0.5,                  // where in the ramp the hue should be centered
-      hEasing: (x, fr) => x,              // hue easing function
-      sRange: [0.4, 0.35],                 // saturation range
-      sEasing: (x, fr) => Math.pow(x, 2), // saturation easing function
-      lRange: [Math.random() * 0.1, 0.9],  // lightness range
-      lEasing: (x, fr) => Math.pow(x, 1.5) // lightness easing function
-  });
-}
 
 
 
 
+///// MAIN RESULTS SCREEN + FUNCTIONS ////
 
 function drawResultsScreen() {
 
@@ -1478,13 +1411,13 @@ blendMode(BLEND)
     
     //const alpha = map(mappedControllerValues[9], 0, 360, 5, 40); // Alpha value
     //fill(averageValue, 100, 100, alpha); // Fill color based on average hue
-    let alpha = 50;
+    //let alpha = 50;
     if(toggleOutline){
      fill(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
       noStroke();
     }else{
       strokeWeight(3)
-      stroke(colorHue, 100, 100, alpha); // stroke color based on mapped controller value
+      stroke(colorHue, 100, 100); // stroke color based on mapped controller value
       fill(colorHue, 100, 100, 10); // stroke color based on mapped controller value
 
       //noFill();
@@ -1715,3 +1648,85 @@ function drawSensorBoxesAndBars() {
     
   }
 }
+
+
+
+////FUNCTIONS FOR OTHER TEST MODES
+function drawGeometricAnimations() {
+  // Don't redraw the background
+  // background(0, 0, 32);
+
+  // Set up the layout
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const maxRadius = min(width, height) * 0.4;
+
+  // Draw rotating pentagons
+  for (let i = 0; i < 5; i++) {
+    const angle = frameCount * 0.02 + i * TWO_PI / 5;
+    const x = centerX + cos(angle) * maxRadius * 0.6;
+    const y = centerY + sin(angle) * maxRadius * 0.6;
+    const size = map(sensors[i], 0, 360, 20, 200);
+    const hue = sensors[i];//map(sensors[i], 0, 100, 0, 360);
+    
+    push();
+    translate(x, y);
+    rotate(frameCount * 0.05 + i * TWO_PI / 5);
+    noFill();
+    stroke(hue, 100, 100, 50); // Added transparency
+    strokeWeight(2);
+    polygon(0, 0, size, 5);
+    pop();
+  }
+
+  // Draw staggered lines
+  for (let i = 0; i < 5; i++) {
+    const angle = map(i, 0, 5, 0, TWO_PI);
+    const length = map(sensors[i], 0, 100, 0, maxRadius);
+    const hue = map(sensors[i], 0, 100, 180, 540);
+    
+    push();
+    translate(centerX, centerY);
+    rotate(angle + frameCount * 0.02);
+    stroke(hue % 360, 100, 100, 50); // Added transparency
+    strokeWeight(5);
+    line(0, 0, length, 0);
+    pop();
+  }
+
+  // Draw central circle
+  const avgSensor = sensors.slice(0, totalInputs).reduce((a, b) => a + b, 0) / totalInputs;
+  const centralSize = map(avgSensor, 0, 100, 20, 100);
+  const centralHue = map(avgSensor, 0, 100, 0, 360);
+  
+  noStroke();
+  noFill();
+  //fill(centralHue, 100, 100, 10); // Increased transparency
+  
+  //fill(centralHue, 100, 100, 10); // Increased transparency
+  circle(centerX, centerY, centralSize);
+
+  // Display sensor values
+  if(debugMode){
+  textAlign(LEFT, TOP);
+  textSize(12);
+  fill(1);
+  rect(10,10,50,totalInputs*20);
+  for (let i = 0; i < totalInputs; i++) {
+    fill(i * 72 % 360, 100, 100);
+    text(`S${i}: ${sensors[i]}`, 10, 10 + i * 20);
+  }
+  }
+}
+//
+function polygon(x, y, radius, npoints) {
+  let angle = TWO_PI / npoints;
+  beginShape();
+  for (let a = 0; a < TWO_PI; a += angle) {
+    let sx = x + cos(a) * radius;
+    let sy = y + sin(a) * radius;
+    vertex(sx, sy);
+  }
+  endShape(CLOSE);
+}
+
