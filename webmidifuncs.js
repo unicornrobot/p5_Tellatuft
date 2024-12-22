@@ -20,31 +20,32 @@ WebMidi
 
 //WEBMIDI//
 function onMidiEnabled() {
-    console.log("MIDI enabled");
+    if(debugMode){console.log("MIDI enabled")};
           
     const myMidi = WebMidi.inputs[0];
     const myMidiOut = WebMidi.outputs[0];
 
       // Display available MIDI input devices
-      if (WebMidi.inputs.length < 1)
-          console.log("No device detected.");
-      else
+      if (WebMidi.inputs.length < 1){
+        if(debugMode){console.log("No device detected.")};
+      }else{
           WebMidi.inputs.forEach((device, index) => {
             if(debugMode){console.log(`${index}: ${device.name}`)};
           });
 
     // Display available MIDI output devices
     if (WebMidi.outputs.length < 1) {
-      console.log("No MIDI output device detected.");
+      if(debugMode){console.log("No MIDI output device detected.")};
   } else {
       WebMidi.outputs.forEach((device, index) => {
         if(debugMode){console.log(`${index}: ${device.name}`)};
       });
   }
+}
 
 
     if (!myMidiOut) {
-      console.error("MIDI output not found.");
+      if(debugMode){console.error("MIDI output not found.")};
       return; // Exit if no output is found
   }
 

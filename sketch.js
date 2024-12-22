@@ -3,6 +3,8 @@
 //visualizations based on the reading
 //different modes
 
+// 
+
 
 let serial; // variable for the serial object
 let latestData = "waiting for data"; // variable to hold the data
@@ -59,7 +61,7 @@ let sunAlpha = 50;
 let toggleOutline = false;
 
 let viewMode
-let startScreen = 7; // 4 is weave drawing
+let startScreen = 7; // 4 is weave drawing // 7 is palette choice.
 let resultsScreen = 5;// (used if captureMode = fixed/continous) 5 = beckymode - 6 = circulrgraph
 
 
@@ -95,9 +97,9 @@ function preload() {
 }
 
 
-//PALLETES
+//PALETTES
 let palettes = [];
-let selectedPaletteIndex = 0;
+let selectedPaletteIndex = 5; //(1-8)
 const totalPalettes = 8;
 const colorsPerPalette = 8;
 let globalPalette;
@@ -254,9 +256,11 @@ function draw() {
       //drawSummary();
       break;
     case 5:
-      drawDashboard();
 
-      //drawResultsScreen(); //Becky mode
+      //drawDashboard(); //dataviz dashboard
+
+      drawResultsScreen(); //Becky mode
+     
       break;
     case 6: 
       drawWaveformGarden();
@@ -416,7 +420,7 @@ function windowResized() {
 
 function keyPressed() {
 
-  if (key === 'f' || key === 'F') { // Press 'S' to save data
+  if (key === 'f' || key === 'F') { // Press 'f' for full screen
     let fs = fullscreen();
     fullscreen(!fs);
   }
@@ -427,7 +431,7 @@ function keyPressed() {
     saveCanvas('weave_' + Date.now(), 'png');
   }
 
-  if (key === 'i' || key === 'I') { // Press 'S' to save data
+  if (key === 'i' || key === 'I') { // Press 'i' to show info
     displayInfo = !displayInfo;
     }
 
@@ -443,12 +447,14 @@ function keyPressed() {
     */
 
     if (key >= '1' && key <= '8') {
-      selectedPaletteIndex = int(key); // Update selected palette index
-      console.log(selectedPaletteIndex)
+      selectedPaletteIndex = int(key); // Update selected palette index // -1 is needed to map index to palette number (0=1)
+      console.log(`Palette Selected: ${selectedPaletteIndex}`); // Log the selected palette
+
     } 
 
   if (key === 'l' || key === 'L') {
     setGlobalPalette();
+    viewMode = 4;
     //console.log(palette)
     }   
     
@@ -467,10 +473,10 @@ function keyPressed() {
     debugMode = !debugMode;
   }
   if (key === 'v' || key === 'V') {
-    viewMode = (viewMode + 1) % 7; // Now cycles through 6 views
+    viewMode = (viewMode + 1) % 7; // Now cycles through 7 views
 
     if (viewMode === 4) {
-      // Reset capture for summary flower view
+      // Reset capture for weave view
       capturedData = [];
       isCapturing = true;
 
@@ -596,6 +602,7 @@ function generateRandomPalettes() {
           
       }
       palettes.push(palette);
+      if(debugMode){console.log(`Palette ${i + 1}:`, palette)}; // Log the generated palette
   }
 
   if(debugMode){accessHSLValues()};
@@ -656,8 +663,8 @@ function accessHSLValues() {
 
 function setGlobalPalette() {
   // Set the global palette color for use in the sketch
-  globalPalette = palettes[selectedPaletteIndex];
-  console.log(palettes[selectedPaletteIndex]);
+  globalPalette = palettes[selectedPaletteIndex-1];
+  //console.log(palettes[selectedPaletteIndex]);
   // Example usage: fill(globalPalette[0]); // Use the first color of the selected palette
 }
 
@@ -717,8 +724,9 @@ function drawWeave() {
 
     // Draw the box
     noStroke();
+
     //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
-    fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+    //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
 
     //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
     //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
@@ -727,18 +735,24 @@ function drawWeave() {
     //fill(colors[i][0], colors[i][1], colors[i][2], map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on predefined palette / alpha knob 3
    
     //HUE PICKED BY CHOSEN GLOBAL PALETTE
-  const selectedColor = palettes[selectedPaletteIndex][i]; // Get the color object
-  const h = round(hue(selectedColor)); // Get the hue
-  const s = round(saturation(selectedColor)); // Get the saturation
-  const l = round(lightness(selectedColor)); // Get the lightness
+    //const selectedColor = palettes[selectedPaletteIndex-1][i]; // Get the color object // (map the index to the palette number)
+    
+    const selectedColor = globalPalette[i]; // Get the color object // (map the index to the palette number)
 
-  fill(h,s,l);
+    const h = round(hue(selectedColor)); // Get the hue
+    const s = round(saturation(selectedColor)); // Get the saturation
+    const l = round(lightness(selectedColor)); // Get the lightness
+    fill(h,s,l);
 
     //draw the boxes
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     
     // Draw the mirrored box on the x-axis
     rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
+
+         //palette boxes
+         let paletteBoxWidth = width/sensors.length
+         rect(i * paletteBoxWidth, 0, paletteBoxWidth, 50);
 
 
     // Increment the x position for the next box
@@ -1208,8 +1222,6 @@ function drawResultsScreen() {
 
   background(backgroundColor)
 
-  
-
   const totalSensors = sensors.length; // Total number of sensors
 
     // Calculate the average value for each sensor
@@ -1225,12 +1237,18 @@ function drawResultsScreen() {
     // Find the sensor with the highest average
     const highestAverage = Math.max(...averages);
     const highestSensorIndex = averages.indexOf(highestAverage);
-    
+
+   
      //brushMode = true;
     // Draw visualizations in a grid
     for (let i = 0; i < totalSensors; i++) {
+
+       //Offsets
+    const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
+    const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
+        
+    
         //draw becky blobs randomnly onscreen 
-       
         drawBeckyMode(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
 
       }
@@ -1244,16 +1262,33 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
   const boxWidth = window.width/totalInputs; // Width of each box
   const boxHeight = 50; // Height of each box
 
+   // Debugging: Log the selectedPaletteIndex
+   if(debugMode){console.log(`Selected Palette Index: ${selectedPaletteIndex}`)};
+
   // Draw boxes in a line at the top of the screen, each with a color from the palette
-  //window.hslColorValues = generateColorRamp();
+    window.hslColorValues = generateColorRamp();
     let colorHue = hslColorValues[sensorIndex][0];
     let colorSat = hslColorValues[sensorIndex][1] * 100;
     let colorBri = hslColorValues[sensorIndex][2] * 100;
 
+    //HUE PICKED BY CHOSEN GLOBAL PALETTE
+    const selectedColor = palettes[selectedPaletteIndex-1][sensorIndex];// Retrieve the color object from the current palette for the current sensor index
+    const h = round(hue(selectedColor)); // Get the hue
+    const s = round(saturation(selectedColor)); // Get the saturation
+    const l = round(lightness(selectedColor)); // Get the lightness
+    
+    if(debugMode){ console.log(`HSL Values - H: ${h}, S: ${s}, L: ${l}`)};
+
+/////FILL OPTIONS/////
     //use averages from captured data as hue/sat/bri values
-    fill(average, average, average, 50);
+    //fill(average, average, average, 50);
+
     //use hslcolorvalues from rampensau
     //fill(colorHue, colorSat, colorBri, 50);
+
+    //use fill from global palette choice 
+    fill(h,s,l);
+
 
     //palette boxes
     rect(sensorIndex * boxWidth, 0, boxWidth, boxHeight);
@@ -1277,17 +1312,23 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
       brush.noStroke();
       //brush.fillAnimatedMode(true); // THIS DOESNT SEEM TO PREVENT A REDRAW OF THE FILL
 
-      brush.fill(average,100,100,100);
+      //brush.fill(average,100,100,100);
+      brush.fill(h,s,l,100)
+
       //brush.fillTexture(map(average,0,360,0,1),0) //texture strength (0-1) and border intensity (0-1)
       brush.fillTexture(1,0) //texture strength (0-1) and border intensity (0-1)
       brush.bleed(map(average,0,360,0,0.3), "out");
 
 
     }else{
+
+    //global chosen palette values
+    fill(h,s,l)
+
      //fill(colorHue, 100, 100, map(mappedControllerValues[9],0,360,10,90));
      //fill(colorHue,colorSat,colorBri,50);
-     fill(average,average,average,50);
-      //fill(hslColorValues[7][0],hslColorValues[0][1]*100,hslColorValues[0][1]*100)
+     //fill(average,average,average,50);
+     //fill(hslColorValues[7][0],hslColorValues[0][1]*100,hslColorValues[0][1]*100)
      //console.log(hslColorValues)
 
      //fill(colorHue, colorSat, colorBri, 50);
@@ -1315,13 +1356,59 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
   if(brushMode){brush.endShape(CLOSE);}else{endShape(CLOSE)};
   pop();
   
-if(brushMode){noLoop()}; //KILLS THE SCRIPT DEAD - NOT IDEAL - NO MORE INTERACTION
+//KILLS THE SCRIPT DEAD - NOT IDEAL - NO MORE INTERACTION
+/// NEED A BETTER SOLUTION
+if(brushMode){noLoop()}; 
 }
 
 
 /////////////////////////
-///////DASHBOARD MODE ////
+///////DASHBOARD DATA VIZ MODE ////
 ////////////////////////////
+
+let dashDrawOnce = false;
+
+function drawDashboard(){
+if(!dashDrawOnce){
+
+isCapturing = false;
+if(debugMode){console.log(capturedData)};
+
+    averages = sensors.map((_, i) => {
+    const sensorData = capturedData.map(data => data[i]);
+    return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;});
+    // Find the sensor with the highest average
+    const highestAverage = Math.max(...averages);
+    const highestSensorIndex = averages.indexOf(highestAverage);
+
+    if(debugMode){
+    console.log(averages);
+    console.log('highest average ' + highestAverage);
+    console.log('highest index ' + highestSensorIndex);}
+
+    //draw once
+    dashDrawOnce = true;   
+    drawCircularLineGraph(width*0.2, height*0.4 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+                          //width*0.2, height*0.27 ,0.08
+    drawSensorLineRipples(width*0.8,height*0.4,0.10);//x,y,max
+                        //width*0.5,height*0.27,0.10
+    drawLineGraph(height*0.20); //max
+
+    drawConcentricArcs(width*0.5, height*0.4, 0.4);//x,y,max
+                      //width*0.8, height*0.27, 0.3
+
+    drawSensorBoxesAndBars();
+
+  }
+  
+  //draw here for looping
+    //drawDataPie(width*0.1, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+  
+  //
+
+
+}
+
 //COMBINED LINE GRAPHS
 function drawLineGraph(max) {
   const maxGraphHeight = height*0.10;//max; // Set a maximum height for the graph
@@ -1610,50 +1697,4 @@ function drawSensorBoxesAndBars() {
 
     
   }
-}
-
-
-
-
-let dashDrawOnce = false;
-
-function drawDashboard(){
-if(!dashDrawOnce){
-
-isCapturing = false;
-if(debugMode){console.log(capturedData)};
-
-    averages = sensors.map((_, i) => {
-    const sensorData = capturedData.map(data => data[i]);
-    return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;});
-    // Find the sensor with the highest average
-    const highestAverage = Math.max(...averages);
-    const highestSensorIndex = averages.indexOf(highestAverage);
-
-    if(debugMode){
-    console.log(averages);
-    console.log('highest average ' + highestAverage);
-    console.log('highest index ' + highestSensorIndex);}
-
-    //draw once
-    dashDrawOnce = true;   
-    drawCircularLineGraph(width*0.2, height*0.4 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
-                          //width*0.2, height*0.27 ,0.08
-    drawSensorLineRipples(width*0.8,height*0.4,0.10);//x,y,max
-                        //width*0.5,height*0.27,0.10
-    drawLineGraph(height*0.20); //max
-
-    drawConcentricArcs(width*0.5, height*0.4, 0.4);//x,y,max
-                      //width*0.8, height*0.27, 0.3
-
-    drawSensorBoxesAndBars();
-
-  }
-  
-  //draw here for looping
-    //drawDataPie(width*0.1, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
-  
-  //
-
-
 }
