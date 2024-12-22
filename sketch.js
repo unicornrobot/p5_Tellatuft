@@ -56,7 +56,7 @@ let hori_count= 14
 let vert_count = 7
 
 let sunColor;
-let sunAlpha = 50;
+let sunAlpha = 100;
 
 let toggleOutline = false;
 
@@ -222,34 +222,6 @@ function draw() {
   //text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
 }
 
-// Function to generate sample data
-function generateSampleData() {
-  sampleData = [];
-  for (let i = 0; i < 50; i++) { // Generate 200 data points
-    const noisyData = Array.from({ length: totalInputs }, () => {
-      // Introduce sporadic peaks and spikes in the data
-      let baseValue = random(0, 100); // Base value between 0 and 100
-      let noiseOffset = random(-20, 20); // Random noise offset between -20 and 20
-      // Introduce sporadic peaks and spikes
-      if (random(1) < 0.1) { // 10% chance of a peak or spike
-        noiseOffset = random(-50, 50); // Larger noise offset for peaks and spikes
-      }
-      // Create portions with minimum data
-      if (random(1) < 0.3) { // 30% chance of minimum data
-        baseValue = 0; // Set base value to 0 for minimum data
-      }
-      return Math.max(0, Math.min(baseValue + noiseOffset, 100)); // Ensure the value is between 0 and 100
-    });
-    sampleData.push(noisyData);
-  }
-}
-
-// Function to save captured data and mapped controller values to local storage
-function saveDataToLocalStorage() {
-  localStorage.setItem('capturedData', JSON.stringify(capturedData));
-  localStorage.setItem('mappedControllerValues', JSON.stringify(mappedControllerValues));
-  console.log("Data saved to local storage.");
-}
 
 // when data is received in the serial buffer
 function gotData() {
@@ -276,123 +248,6 @@ function gotData() {
   for (let i = 0; i < totalInputs; i++) {
     sensors.push(splitVal[i])
     
-  }
-}
-
-function drawDebugView() {
-  let graphHeight = height * 0.6;
-  let graphY = height * 0.2;
-  
-  // Draw the graph background
-  fill(0, 0, 40);
-  noStroke();
-  rect(0, graphY, width, graphHeight);
-  
-  // Draw horizontal lines
-  stroke(255, 30);
-  for (let i = 0; i <= 10; i++) {
-    let y = graphY + graphHeight * (1 - i / 10);
-    line(0, y, width, y);
-    
-    // Add labels
-    fill(255);
-    noStroke();
-    textAlign(RIGHT, CENTER);
-    text(i * maxDataValue/10, width * 0.05, y);
-  }
-  
-  // Plot the sensor data
-  for (let i = 0; i < totalInputs; i++) {
-    let x = map(i, 0, totalInputs - 1, width * 0.1, width * 0.9);
-    let y = map(sensors[i], 0, maxDataValue, graphY + graphHeight, graphY);
-    
-    // Draw vertical lines for each sensor
-    stroke(255, 50);
-    line(x, graphY + graphHeight, x, graphY);
-    
-    // Draw data points
-    noStroke();
-    fill(i * 30 % 360, 100, 100);
-    circle(x, y, 15);
-    
-    // Add labels for sensor numbers
-    fill(255);
-    textAlign(CENTER, TOP);
-    text("S" + i, x, graphY + graphHeight + 10);
-    
-    // Add value labels
-    textAlign(CENTER, BOTTOM);
-    text(int(sensors[i]), x, y - 10);
-    
-    // Draw lines connecting the points
-    if (i > 0) {
-      let prevX = map(i - 1, 0, totalInputs - 1, width * 0.1, width * 0.9);
-      let prevY = map(sensors[i - 1], 0, maxDataValue, graphY + graphHeight, graphY);
-      stroke(255, 100);
-      line(prevX, prevY, x, y);
-    }
-  }
-  
-  // Add title
-  fill(255);
-  textAlign(CENTER, TOP);
-  textSize(24);
-  text("Sensor Readings", width / 2, height * 0.05);
-}
-
-function drawLiveGraphs() {
-  const graphHeight = height / 8;
-  const graphWidth = width * 0.9;
-  const leftMargin = width * 0.05;
-
-  frameCounter++;
-
-  for (let i = 0; i < totalInputs; i++) {
-    const yPos = i * graphHeight;
-    
-    // Draw graph background
-    fill(0, 0, 40);
-    noStroke();
-    rect(leftMargin, yPos, graphWidth, graphHeight);
-
-    // Draw graph title
-    fill(255);
-    textAlign(LEFT, TOP);
-    textSize(12);
-    text(`Sensor ${i}`, leftMargin, yPos + 5);
-
-    // Draw current value
-    textAlign(RIGHT, TOP);
-    // Check if capturedControllerValues has enough elements
-    const currentValue = (capturedControllerValues.length > i) ? capturedControllerValues[i] : sensors[i]; // Use stored value if available
-    text(currentValue, width - leftMargin, yPos + 5);
-
-    // Add new data point based on updateInterval
-    if (frameCounter >= updateInterval) {
-      if (!graphData[i]) {
-        graphData[i] = [];
-      }
-      graphData[i].push(sensors[i]);
-      if (graphData[i].length > maxDataValue) {
-        graphData[i].shift();
-      }
-    }
-
-    // Draw graph
-    stroke(i * 30 % 360, 100, 100);
-    noFill();
-    beginShape();
-    
-    
-    if (graphData[i] && graphData[i].length) {
-      for (let j = 0; j < graphData[i].length; j++) {
-        const x = map(j, 0, maxDataValue - 1, leftMargin, leftMargin + graphWidth);
-        const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
-        vertex(x, y);
-      }
-    }
-
-    endShape();
   }
 }
 
@@ -533,16 +388,14 @@ function generateRandomColorRamps() {
         total: 8,
         hCenter: Math.random() * 360, 
         hCycles: Math.random() * 1.5, //1.5
-        sRange: [30, 70],  // 30, 70 
+        sRange: [50, 70],  // SATURATION RANGE - try 30, 70 
         sEasing: x => Math.pow(x, 2),
-        lRange: [Math.random() * 30, 75 + Math.random() * 10],
-        lEasing: easings.linear,//x => Math.pow(x, 15),
+        lRange: [Math.random() * 40, 75 + Math.random() * 10],
+        lEasing: easings.easeInQuad,//x => Math.pow(x, 15),
       });
       palettes.push(palette);
   }
 }
-
-
 
 const easeIn = p => t => Math.pow(t, p)
 const easeOut = p => t => 1 - easeIn(p)(1 - t)
@@ -563,50 +416,24 @@ const easings = {
 	easeInOutQuint: easeInOut(5)
 }
 
+//EXAMPLE generateRandomColorRamp /// 
+/*function generateRandomColorRamps() {
+  palettes = []; // Clear existing palettes
 
-///EXAMPLE CALL
-/*generateColorRamp({
-  total: 9,
-  hStart: 72.286,
-  hStartCenter: 0.500,
-  hEasing: x => x,
-  hCycles: 1.144,
-  sRange: [0.400, 0.350],
-  sEasing: x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
-  lRange: [0.082, 0.974],
-  lEasing: x => -(Math.cos(Math.PI * x) - 1) / 2,
-});
-*/
-
-
-
-
-let hasGeneratedColors = false; // Flag to track if colors have been generated
-// Function to refresh colors, called when needed
-function refreshColors(averagesList) {
-  if (!hasGeneratedColors) { // Check if colors have already been generated
-      generateNewColorRamp(averagesList,8); // Generate new colorsb
-      hasGeneratedColors = true; // Set the flag to true
+  for (let i = 0; i < 8; i++) {
+      const palette = generateColorRamp({
+        total: 8,
+        hCenter: Math.random() * 360, 
+        hCycles: Math.random() * 1.5, //1.5
+        sRange: [30, 70],  // 30, 70 
+        sEasing: x => Math.pow(x, 2),
+        lRange: [Math.random() * 30, 75 + Math.random() * 10],
+        lEasing: easings.linear,//x => Math.pow(x, 15),
+      });
+      palettes.push(palette);
   }
 }
-
-function generateNewColorRamp(huelist, total=8,hstart) { ///defaults
-  window.hslColorValues = generateColorRamp({
-      huelist: huelist,
-      total: total,                           // number of colors in the ramp
-      hStart: hstart,        // hue at the start of the ramp
-      hCycles: 1,                         // number of full hue cycles 
-      hStartCenter: 0.5,                  // where in the ramp the hue should be centered
-      hEasing: (x, fr) => x,              // hue easing function
-      sRange: [0.4, 0.35],                 // saturation range
-      sEasing: (x, fr) => Math.pow(x, 2), // saturation easing function
-      lRange: [Math.random() * 0.1, 0.9],  // lightness range
-      lEasing: (x, fr) => Math.pow(x, 1.5) // lightness easing function
-  });
-}
-
-
-
+*/
 
 
 
@@ -805,8 +632,6 @@ function drawWeave() {
 }
 
 
-
-
 function drawFlowerGarden() {
   // Clear background only when starting a new row
   if (flowerX === 0) {
@@ -896,9 +721,9 @@ function drawFlowerHead(x, y, size, rotation) {
   pop();
 }
 
-function hexAlpha(alpha) {
+/*function hexAlpha(alpha) {
   return ("0" + Math.round(alpha).toString(16)).slice(-2);
-}
+}*/
 
 function resetView() {
   background(backgroundColor)
@@ -937,232 +762,6 @@ function arraysEqual(arr1, arr2) {
   }
   return true; // Arrays are equal
 }
-
-
-
-/*
-function drawLargeSummaryFlower() {
-  push();
-  translate(width / 2, height / 2);
-  
-  // Draw stem
-  stroke(120, 70, 60);
-  strokeWeight(10);
-  line(0, 0, 0, 200);
-  
-  // Draw petals
-  noStroke();
-  for (let i = 0; i < 5; i++) {
-    let petalSize = map(summaryFlower[i], 0, 100, 50, 200);
-    fill(flowerColors[i]);
-    rotate(TWO_PI / 5);
-    ellipse(0, -petalSize / 2, petalSize / 2, petalSize);
-  }
-  
-  // Draw center
-  fill(60, 100, 100);
-  ellipse(0, 0, 50, 50);
-  
-  pop();
-}
- */
-
-function drawDataStar() {
-  background(backgroundColor)
-  translate(width / 2, height / 2);
-  
-  const maxRadius = min(width, height) * 0.4;
-  const angleStep = TWO_PI / sensors.length;
-
-  // Draw connecting lines
-  stroke(100, 50, 50, 50); // Light, semi-transparent lines
-  strokeWeight(1);
-  beginShape();
-  for (let i = 0; i < sensors.length; i++) {
-    const avgSum = summaryFlower[i];
-    const r = map(avgSum, 0, 100, 0, maxRadius);
-    const angle = i * angleStep - PI/2; // Start from top
-    const x = r * cos(angle);
-    const y = r * sin(angle);
-    vertex(x, y);
-  }
-  endShape(CLOSE);
-
-  // Draw points and data captures
-  for (let i = 0; i < sensors.length; i++) {
-    const avgSum = summaryFlower[i];
-    const r = map(avgSum, 0, 100, 0, maxRadius);
-    const angle = i * angleStep - PI/2; // Start from top
-    const x = r * cos(angle);
-    const y = r * sin(angle);
-
-    // Draw main point
-    noStroke();
-    fill(flowerColors[i]);
-    ellipse(x, y, 15, 15);
-
-    // Draw data capture points
-    for (let j = 0; j < capturedData.length; j++) {
-      const value = capturedData[j][i];
-      const deviation = value - avgSum;
-      const dr = map(abs(deviation), 0, 50, 0, maxRadius * 0.2);
-      const dataX = x + dr * cos(angle + PI); // Opposite direction of main point
-      const dataY = y + dr * sin(angle + PI);
-      
-      // Color based on whether it's above or below average
-      const hue = deviation > 0 ? 120 : 0; // Green if above, red if below
-      fill(hue, 100, 100, 70);
-      ellipse(dataX, dataY, 5, 5);
-    }
-
-    // Draw sensor label
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(12);
-    const labelX = (maxRadius + 20) * cos(angle);
-    const labelY = (maxRadius + 20) * sin(angle);
-    text(`S${i}`, labelX, labelY);
-  }
-
-  // Draw center point
-  fill(255);
-  ellipse(0, 0, 10, 10);
-
-  // Draw legend
-  drawLegend();
-}
-
-function drawLegend() {
-  const legendX = -width/2 + 20;
-  const legendY = height/2 - 60;
-  
-  fill(255);
-  textAlign(LEFT, CENTER);
-  textSize(12);
-  text("Legend:", legendX, legendY);
-  text("Main point: Average", legendX, legendY + 20);
-  text("Small points: Data captures", legendX, legendY + 40);
-  
-  fill(120, 100, 100);
-  ellipse(legendX - 10, legendY + 40, 5, 5);
-  text("Above average", legendX + 110, legendY + 40);
-  
-  fill(0, 100, 100);
-  ellipse(legendX - 10, legendY + 60, 5, 5);
-  text("Below average", legendX + 110, legendY + 60);
-}
-
-
-function drawWaveformGarden() {
-  // Ensure waveHeight is defined before using it
-  if (waveHeight === undefined) {
-    waveHeight = height / 20; // Fallback definition if not set
-  }
-  //colorMode(HSB, 360, 100, 100, 100);
-  background(200, 30, 95); // Light blue sky
-  
-  // Draw sun
-  fill(60,100,100,sunAlpha);
-  noStroke();
-  circle(width - 50, 50, 80);
-  
-  // Use either capturedData or sampleData based on offline mode
-  const dataToUse = offlineMode ? sampleData : capturedData;
-
-//ADJUSTING WITH MIDI CONTROLER
- let  landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
- let  seaHeight = map(mappedControllerValues[4], 0, 100, height, 0);
-
-
- landHeight =200;
- seaHeight =400;
-
- //console.log(mappedControllerValues[3]);
-  drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
-  drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2], 200);
-
-}
-///FUNCTIONS//
-
-function drawDataWaves(dataToUse, startY, distance, startHue) {
-  for (let i = 0; i < sensors.length; i++) {
-    const yBase = startY + (i + 1) * distance; // Use the distance parameter for spacing
-    const avgSum = dataToUse[i];
-    
-    // Calculate a unique green hue for each wave
-    const hillsHue = startHue + i * 10; // Vary hue based on starting color
-    
-    // Draw ground
-    fill(hillsHue, 60, 60);
-    stroke(hillsHue, 30, 30);
-    strokeWeight(2);
-    beginShape();
-    curveVertex(0, height);
-    curveVertex(0, yBase);
-    
-    // Draw waveform
-    let prevX = 0;
-    let prevY = yBase;
-    for (let x = 0; x <= width; x += 10) {
-      const index = floor(map(x, 0, width, 0, dataToUse.length - 1));
-      const value = dataToUse[index][i]; // Use dataToUse instead of capturedData
-      const noiseValue = noise(x * 0.01, i * 10) * 20; // Generates a Perlin noise value for organic variation
-      const y = yBase - map(value, 0, 100, 0, distance * 0.3) - noiseValue;
-      
-      curveVertex(x, y);
-      
-      // Draw tree (but not on every iteration to reduce density)
-      /*
-      if (x % 60 == 0 && x > 0) {
-        drawTree(prevX + (x - prevX) / 2, (prevY + y) / 2, map(value, 0, 100, treeBaseSize, treeBaseSize * 3), hillsHue);
-      }
-        */
-      
-      prevX = x;
-      prevY = y;
-    }
-    
-    curveVertex(width, yBase);
-    curveVertex(width, height);
-    endShape(CLOSE);
-  }
-}
-
-
-
-function drawTree(x, y, size, hue) {
-  push();
-  translate(x, y);
-  
-  // Draw trunk
-  stroke(30, 60, 40);
-  strokeWeight(size / 5);
-  line(0, 0, 0, -size);
-  
-  // Draw leaves
-  fill(hue, 70, 70);
-  noStroke();
-  triangle(-size/2, -size*0.8, 0, -size*1.5, size/2, -size*0.8);
-  triangle(-size*0.7, -size*0.5, 0, -size*1.2, size*0.7, -size*0.5);
-  triangle(-size*0.9, -size*0.2, 0, -size*0.9, size*0.9, -size*0.2);
-  
-  pop();
-}
-
-function drawWaveformLegend() {
-  const legendX = width - 150;
-  const legendY = height - 80;
-  
-  fill(0, 0, 0);
-  noStroke();
-  textAlign(LEFT, CENTER);
-  textSize(12);
-  text("Legend:", legendX, legendY);
-  //text("Red line: Average", legendX, legendY + 20);
-  text("Wave: Sensor readings", legendX, legendY + 40);
-  text("Trees: Data points", legendX, legendY + 60);
-}
-
 
 
 
@@ -1215,11 +814,6 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
    // Debugging: Log the selectedPaletteIndex
    if(debugMode){console.log(`Selected Palette Index: ${selectedPaletteIndex}`)};
 
-  // Draw boxes in a line at the top of the screen, each with a color from the palette
-    window.hslColorValues = generateColorRamp();
-    let colorHue = hslColorValues[sensorIndex][0];
-    let colorSat = hslColorValues[sensorIndex][1] * 100;
-    let colorBri = hslColorValues[sensorIndex][2] * 100;
 
     //HUE PICKED BY CHOSEN GLOBAL PALETTE
     const selectedColor = palettes[selectedPaletteIndex-1][sensorIndex];// Retrieve the color object from the current palette for the current sensor index
@@ -1413,7 +1007,7 @@ blendMode(BLEND)
     //fill(averageValue, 100, 100, alpha); // Fill color based on average hue
     //let alpha = 50;
     if(toggleOutline){
-     fill(colorHue, 100, 100, alpha); // Fill color based on mapped controller value
+     fill(colorHue, 100, 100, 100); // Fill color based on mapped controller value
       noStroke();
     }else{
       strokeWeight(3)
@@ -1650,8 +1244,128 @@ function drawSensorBoxesAndBars() {
 }
 
 
-
+//////////////////////////////////
 ////FUNCTIONS FOR OTHER TEST MODES
+//////////////////////////////////
+
+//mode 0
+function drawDebugView() {
+  let graphHeight = height * 0.6;
+  let graphY = height * 0.2;
+  
+  // Draw the graph background
+  fill(0, 0, 40);
+  noStroke();
+  rect(0, graphY, width, graphHeight);
+  
+  // Draw horizontal lines
+  stroke(255, 30);
+  for (let i = 0; i <= 10; i++) {
+    let y = graphY + graphHeight * (1 - i / 10);
+    line(0, y, width, y);
+    
+    // Add labels
+    fill(255);
+    noStroke();
+    textAlign(RIGHT, CENTER);
+    text(i * maxDataValue/10, width * 0.05, y);
+  }
+  
+  // Plot the sensor data
+  for (let i = 0; i < totalInputs; i++) {
+    let x = map(i, 0, totalInputs - 1, width * 0.1, width * 0.9);
+    let y = map(sensors[i], 0, maxDataValue, graphY + graphHeight, graphY);
+    
+    // Draw vertical lines for each sensor
+    stroke(255, 50);
+    line(x, graphY + graphHeight, x, graphY);
+    
+    // Draw data points
+    noStroke();
+    fill(i * 30 % 360, 100, 100);
+    circle(x, y, 15);
+    
+    // Add labels for sensor numbers
+    fill(255);
+    textAlign(CENTER, TOP);
+    text("S" + i, x, graphY + graphHeight + 10);
+    
+    // Add value labels
+    textAlign(CENTER, BOTTOM);
+    text(int(sensors[i]), x, y - 10);
+    
+    // Draw lines connecting the points
+    if (i > 0) {
+      let prevX = map(i - 1, 0, totalInputs - 1, width * 0.1, width * 0.9);
+      let prevY = map(sensors[i - 1], 0, maxDataValue, graphY + graphHeight, graphY);
+      stroke(255, 100);
+      line(prevX, prevY, x, y);
+    }
+  }
+  
+  // Add title
+  fill(255);
+  textAlign(CENTER, TOP);
+  textSize(24);
+  text("Sensor Readings", width / 2, height * 0.05);
+}
+//mode 1
+function drawLiveGraphs() {
+  const graphHeight = height / 8;
+  const graphWidth = width * 0.9;
+  const leftMargin = width * 0.05;
+
+  frameCounter++;
+
+  for (let i = 0; i < totalInputs; i++) {
+    const yPos = i * graphHeight;
+    
+    // Draw graph background
+    fill(0, 0, 40);
+    noStroke();
+    rect(leftMargin, yPos, graphWidth, graphHeight);
+
+    // Draw graph title
+    fill(255);
+    textAlign(LEFT, TOP);
+    textSize(12);
+    text(`Sensor ${i}`, leftMargin, yPos + 5);
+
+    // Draw current value
+    textAlign(RIGHT, TOP);
+    // Check if capturedControllerValues has enough elements
+    const currentValue = (capturedControllerValues.length > i) ? capturedControllerValues[i] : sensors[i]; // Use stored value if available
+    text(currentValue, width - leftMargin, yPos + 5);
+
+    // Add new data point based on updateInterval
+    if (frameCounter >= updateInterval) {
+      if (!graphData[i]) {
+        graphData[i] = [];
+      }
+      graphData[i].push(sensors[i]);
+      if (graphData[i].length > maxDataValue) {
+        graphData[i].shift();
+      }
+    }
+
+    // Draw graph
+    stroke(i * 30 % 360, 100, 100);
+    noFill();
+    beginShape();
+    
+    
+    if (graphData[i] && graphData[i].length) {
+      for (let j = 0; j < graphData[i].length; j++) {
+        const x = map(j, 0, maxDataValue - 1, leftMargin, leftMargin + graphWidth);
+        const y = map(graphData[i][j], 0, 100, yPos + graphHeight - 10, yPos + 10);
+        vertex(x, y);
+      }
+    }
+
+    endShape();
+  }
+}
+//mode 2
 function drawGeometricAnimations() {
   // Don't redraw the background
   // background(0, 0, 32);
@@ -1730,3 +1444,223 @@ function polygon(x, y, radius, npoints) {
   endShape(CLOSE);
 }
 
+function drawDataStar() {
+  background(backgroundColor)
+  translate(width / 2, height / 2);
+  
+  const maxRadius = min(width, height) * 0.4;
+  const angleStep = TWO_PI / sensors.length;
+
+  // Draw connecting lines
+  stroke(100, 50, 50, 50); // Light, semi-transparent lines
+  strokeWeight(1);
+  beginShape();
+  for (let i = 0; i < sensors.length; i++) {
+    const avgSum = summaryFlower[i];
+    const r = map(avgSum, 0, 100, 0, maxRadius);
+    const angle = i * angleStep - PI/2; // Start from top
+    const x = r * cos(angle);
+    const y = r * sin(angle);
+    vertex(x, y);
+  }
+  endShape(CLOSE);
+
+  // Draw points and data captures
+  for (let i = 0; i < sensors.length; i++) {
+    const avgSum = summaryFlower[i];
+    const r = map(avgSum, 0, 100, 0, maxRadius);
+    const angle = i * angleStep - PI/2; // Start from top
+    const x = r * cos(angle);
+    const y = r * sin(angle);
+
+    // Draw main point
+    noStroke();
+    fill(flowerColors[i]);
+    ellipse(x, y, 15, 15);
+
+    // Draw data capture points
+    for (let j = 0; j < capturedData.length; j++) {
+      const value = capturedData[j][i];
+      const deviation = value - avgSum;
+      const dr = map(abs(deviation), 0, 50, 0, maxRadius * 0.2);
+      const dataX = x + dr * cos(angle + PI); // Opposite direction of main point
+      const dataY = y + dr * sin(angle + PI);
+      
+      // Color based on whether it's above or below average
+      const hue = deviation > 0 ? 120 : 0; // Green if above, red if below
+      fill(hue, 100, 100, 70);
+      ellipse(dataX, dataY, 5, 5);
+    }
+
+    // Draw sensor label
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    const labelX = (maxRadius + 20) * cos(angle);
+    const labelY = (maxRadius + 20) * sin(angle);
+    text(`S${i}`, labelX, labelY);
+  }
+
+  // Draw center point
+  fill(255);
+  ellipse(0, 0, 10, 10);
+
+  // Draw legend
+  drawLegend();
+}
+
+function drawLegend() {
+  const legendX = -width/2 + 20;
+  const legendY = height/2 - 60;
+  
+  fill(255);
+  textAlign(LEFT, CENTER);
+  textSize(12);
+  text("Legend:", legendX, legendY);
+  text("Main point: Average", legendX, legendY + 20);
+  text("Small points: Data captures", legendX, legendY + 40);
+  
+  fill(120, 100, 100);
+  ellipse(legendX - 10, legendY + 40, 5, 5);
+  text("Above average", legendX + 110, legendY + 40);
+  
+  fill(0, 100, 100);
+  ellipse(legendX - 10, legendY + 60, 5, 5);
+  text("Below average", legendX + 110, legendY + 60);
+}
+
+function drawWaveformGarden() {
+  // Ensure waveHeight is defined before using it
+  if (waveHeight === undefined) {
+    waveHeight = height / 20; // Fallback definition if not set
+  }
+  //colorMode(HSB, 360, 100, 100, 100);
+  background(200, 30, 95); // Light blue sky
+  
+  // Draw sun
+  fill(60,100,100,100);
+  noStroke();
+  circle(width - 50, 50, 80);
+  
+  // Use either capturedData or sampleData based on offline mode
+  const dataToUse = offlineMode ? sampleData : capturedData;
+
+//ADJUSTING WITH MIDI CONTROLER
+ let  landHeight = map(mappedControllerValues[3], 0, 100, height, 0);
+ let  seaHeight = map(mappedControllerValues[4], 0, 100, height, 0);
+
+
+ landHeight =200;
+ seaHeight =400;
+
+ //console.log(mappedControllerValues[3]);
+  drawDataWaves(dataToUse, landHeight ,  mappedControllerValues[1] , 90); // Adjust parameters as needed
+  drawDataWaves(dataToUse, seaHeight,   mappedControllerValues[2], 200);
+
+}
+
+function drawDataWaves(dataToUse, startY, distance, startHue) {
+  for (let i = 0; i < sensors.length; i++) {
+    const yBase = startY + (i + 1) * distance; // Use the distance parameter for spacing
+    const avgSum = dataToUse[i];
+    
+    // Calculate a unique green hue for each wave
+    const hillsHue = startHue + i * 10; // Vary hue based on starting color
+    
+    // Draw ground
+    fill(hillsHue, 60, 60);
+    stroke(hillsHue, 30, 30);
+    strokeWeight(2);
+    beginShape();
+    curveVertex(0, height);
+    curveVertex(0, yBase);
+    
+    // Draw waveform
+    let prevX = 0;
+    let prevY = yBase;
+    for (let x = 0; x <= width; x += 10) {
+      const index = floor(map(x, 0, width, 0, dataToUse.length - 1));
+      const value = dataToUse[index][i]; // Use dataToUse instead of capturedData
+      const noiseValue = noise(x * 0.01, i * 10) * 20; // Generates a Perlin noise value for organic variation
+      const y = yBase - map(value, 0, 100, 0, distance * 0.3) - noiseValue;
+      
+      curveVertex(x, y);
+      
+      // Draw tree (but not on every iteration to reduce density)
+      /*
+      if (x % 60 == 0 && x > 0) {
+        drawTree(prevX + (x - prevX) / 2, (prevY + y) / 2, map(value, 0, 100, treeBaseSize, treeBaseSize * 3), hillsHue);
+      }
+        */
+      
+      prevX = x;
+      prevY = y;
+    }
+    
+    curveVertex(width, yBase);
+    curveVertex(width, height);
+    endShape(CLOSE);
+  }
+}
+
+function drawTree(x, y, size, hue) {
+  push();
+  translate(x, y);
+  
+  // Draw trunk
+  stroke(30, 60, 40);
+  strokeWeight(size / 5);
+  line(0, 0, 0, -size);
+  
+  // Draw leaves
+  fill(hue, 70, 70);
+  noStroke();
+  triangle(-size/2, -size*0.8, 0, -size*1.5, size/2, -size*0.8);
+  triangle(-size*0.7, -size*0.5, 0, -size*1.2, size*0.7, -size*0.5);
+  triangle(-size*0.9, -size*0.2, 0, -size*0.9, size*0.9, -size*0.2);
+  
+  pop();
+}
+
+function drawWaveformLegend() {
+  const legendX = width - 150;
+  const legendY = height - 80;
+  
+  fill(0, 0, 0);
+  noStroke();
+  textAlign(LEFT, CENTER);
+  textSize(12);
+  text("Legend:", legendX, legendY);
+  //text("Red line: Average", legendX, legendY + 20);
+  text("Wave: Sensor readings", legendX, legendY + 40);
+  text("Trees: Data points", legendX, legendY + 60);
+}
+
+// Function to generate sample data
+function generateSampleData() {
+  sampleData = [];
+  for (let i = 0; i < 50; i++) { // Generate 200 data points
+    const noisyData = Array.from({ length: totalInputs }, () => {
+      // Introduce sporadic peaks and spikes in the data
+      let baseValue = random(0, 100); // Base value between 0 and 100
+      let noiseOffset = random(-20, 20); // Random noise offset between -20 and 20
+      // Introduce sporadic peaks and spikes
+      if (random(1) < 0.1) { // 10% chance of a peak or spike
+        noiseOffset = random(-50, 50); // Larger noise offset for peaks and spikes
+      }
+      // Create portions with minimum data
+      if (random(1) < 0.3) { // 30% chance of minimum data
+        baseValue = 0; // Set base value to 0 for minimum data
+      }
+      return Math.max(0, Math.min(baseValue + noiseOffset, 100)); // Ensure the value is between 0 and 100
+    });
+    sampleData.push(noisyData);
+  }
+}
+
+// Function to save captured data and mapped controller values to local storage
+function saveDataToLocalStorage() {
+  localStorage.setItem('capturedData', JSON.stringify(capturedData));
+  localStorage.setItem('mappedControllerValues', JSON.stringify(mappedControllerValues));
+  console.log("Data saved to local storage.");
+}
