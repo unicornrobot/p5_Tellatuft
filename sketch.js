@@ -462,6 +462,8 @@ function generateRandomPalettes() {
   if(debugMode){accessHSLValues()};
 }
 
+////DISPLAY PALETTES
+
 function displayPalettes() {
 
   //check for button presses
@@ -471,16 +473,19 @@ if(button1State === 1){ //if btn1 is pressed go to the capture screen
   viewMode = captureScreen; 
 };
 if(button2State === 1){ //if btn2 is pressed shuffle the palettes
-  generateRandomColorRamps();
+  generateRandomColorRamps(); /// TO DO - CYCLE ONLY ONCE.
 };
+
+
+
 
   background(backgroundColor);
   noStroke();
   const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
-  const paletteHeight = 50; // Adjusted height for each palette block
+  const paletteHeight = height *0.07; // Adjusted height for each palette block
   const margin = width * 0.09; // Adjusted margin between palettes
   const startX = margin; // Starting X position
-  const startY = height - (paletteHeight + margin) * 4.5; // Starting Y position for 4 rows
+  const startY = height - (paletteHeight + margin) * 3.7; // Starting Y position for 4 rows
 
   for (let i = 0; i < 8; i++) { // Limit to display 4 rows of 2 palettes
     noStroke();
@@ -493,7 +498,6 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
 
     // Draw each color in the palette
     for (let j = 0; j < colorsPerPalette; j++) {
-      noStroke(0)
       fill(palettes[i][j]);
       rect(x + j * paletteWidth, y, paletteWidth, paletteHeight); // Draw color block
     }
@@ -523,6 +527,23 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
 
     
   }
+  // Draw 2 grey circles above the palettes at the top of the screen
+
+  if(button2State === 1){fill(0, 0, 60)}else{noFill()};
+  stroke(0, 0, 60); // Set fill color to grey in HSB
+  
+  ellipse(startX, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
+  
+ 
+  ellipse(width - startX, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
+ 
+  // Label the circles
+  fill(0, 0, 100); // Set fill color to white in HSB
+  textAlign(CENTER, CENTER); // Set text alignment to center
+  textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
+  text("shuffle colours", startX, startY - paletteHeight * 3); // Label first circle above the circle
+  text("select a palette", width - startX, startY - paletteHeight * 3); // Label second circle above the circle
+
 
 }
 
@@ -556,11 +577,11 @@ function setGlobalPalette() {
 
 let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
-let resetToBottom = false; // Setting to enable drawing to start at the bottom when it reaches the top
+let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
 
 function drawWeave() {
 
-  const boxHeight = map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = 10;//map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
 
@@ -598,10 +619,10 @@ function drawWeave() {
     
     const selectedColor = currentPalette[i]; // Get the color object // (map the index to the palette number)
 
-    const h = round(hue(selectedColor)); // Get the hue
-    const s = round(saturation(selectedColor)); // Get the saturation
-    const l = round(lightness(selectedColor)); // Get the lightness
-    fill(h,s,l);
+    const h = hue(selectedColor); // Get the hue
+    const s = saturation(selectedColor); // Get the saturation
+    const l = lightness(selectedColor); // Get the lightness
+    fill(h,s,l*1.5);  //hack to match lightness value
 
     //draw the boxes
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
@@ -622,13 +643,11 @@ function drawWeave() {
 
 
     if (debugMode) {
-      fill(0, 0, 0, 150); // Semi-transparent black background
-      noStroke();
-      //rect(width-130, height - 70, 120, 80); // Draw a rectangle behind the text
 
-      fill(255);
-      textSize(12);
-      textAlign(LEFT, TOP);
+
+      //console.log(currentPalette);
+      //console.log(palettes[selectedPaletteIndex-1]);
+      //noLoop();
 
       console.log(sensors.toString());
 
@@ -662,7 +681,9 @@ function drawWeave() {
       verticalOffset = resetToBottom ? 0 : height - boxHeight; //resettoBottom is either true or false
     }
   }
-    
+  
+
+
 }
 
 
