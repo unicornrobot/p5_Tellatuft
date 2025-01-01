@@ -13,6 +13,8 @@ let portButton;
 let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
+let button1State,button2State = 0;
+
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
 let mappedControllerValues = [0,150,50,21,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
@@ -35,7 +37,7 @@ let displayInfo = false;
 
 let backgroundColor =[0,0,10] //0,0,32 = grey / 10 dark grey
 
-let brushMode = false; // enable p5 Brush mode - stops loop - needs fixing
+let brushMode = false ; // enable p5 Brush mode - stops loop - needs fixing
 
 
 let graphData = []; // Array to store historical data for each sensor
@@ -215,12 +217,9 @@ function draw() {
       break;
   }
 
-  // Instructions
-  fill(255);
-  textAlign(LEFT, BOTTOM);
-  textSize(14);
-  //text("Press 'V' to cycle views. '+'/'-' to adjust graph speed.", 10, height - 10);
 }
+
+
 
 
 // when data is received in the serial buffer
@@ -249,6 +248,14 @@ function gotData() {
     sensors.push(splitVal[i])
     
   }
+//button 1 = index 8
+//button 2 = index 9
+
+button1State = splitVal[8];
+button2State = splitVal[9];
+
+if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
+
 }
 
 ///FULLSCREEN CODE
@@ -387,10 +394,10 @@ function generateRandomColorRamps() {
       const palette = generateColorRamp({
         total: 8,
         hCenter: Math.random() * 360, 
-        hCycles: Math.random() * 1.5, //1.5
-        sRange: [50, 70],  // SATURATION RANGE - try 30, 70 
+        hCycles: Math.random() * 0.5, //1.5
+        sRange: [70, 80],  // SATURATION RANGE - try 30, 70 
         sEasing: x => Math.pow(x, 2),
-        lRange: [Math.random() * 40, 75 + Math.random() * 10],
+        lRange: [Math.random() * 60, 75 + Math.random() * 10],
         lEasing: easings.easeInQuad,//x => Math.pow(x, 15),
       });
       palettes.push(palette);
@@ -456,6 +463,17 @@ function generateRandomPalettes() {
 }
 
 function displayPalettes() {
+
+  //check for button presses
+if(button1State === 1){ //if btn1 is pressed go to the capture screen
+  setGlobalPalette();
+  capturedData = []; //clear out the dataset for next time.
+  viewMode = captureScreen; 
+};
+if(button2State === 1){ //if btn2 is pressed shuffle the palettes
+  generateRandomColorRamps();
+};
+
   background(backgroundColor);
   noStroke();
   const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
@@ -489,8 +507,23 @@ function displayPalettes() {
       } else {
         noStroke(); // Ensure no stroke for non-selected palettes
       }
+
+  // Find the sensor with the highest reading and set selectedPaletteIndex accordingly
+  //THIS IS FOR USING THE SENSORS AS INPUTS 1-8
+  
+  let highestReading = 0;
+  let highestReadingIndex = 0;
+  for (let i = 0; i < sensors.length; i++) {
+    if (sensors[i] > highestReading) {
+      highestReading = sensors[i];
+      highestReadingIndex = i;
+    }
+  }
+  selectedPaletteIndex = highestReadingIndex + 1; // Adjust index to match palette numbering
+
     
   }
+
 }
 
 function accessHSLValues() {
@@ -578,7 +611,8 @@ function drawWeave() {
 
          //palette boxes
          let paletteBoxWidth = width/sensors.length
-         rect(i * paletteBoxWidth, 0, paletteBoxWidth, 50);
+         let palleteBoxHeight = height*0.02
+         rect(i * paletteBoxWidth, 0, paletteBoxWidth, palleteBoxHeight);
 
 
     // Increment the x position for the next box
@@ -721,9 +755,9 @@ function drawFlowerHead(x, y, size, rotation) {
   pop();
 }
 
-/*function hexAlpha(alpha) {
+function hexAlpha(alpha) {
   return ("0" + Math.round(alpha).toString(16)).slice(-2);
-}*/
+}
 
 function resetView() {
   background(backgroundColor)
@@ -809,10 +843,7 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
 
   const numSensors = totalInputs; // Number of sensors
   const boxWidth = window.width/totalInputs; // Width of each box
-  const boxHeight = 50; // Height of each box
-
-   // Debugging: Log the selectedPaletteIndex
-   if(debugMode){console.log(`Selected Palette Index: ${selectedPaletteIndex}`)};
+  const boxHeight = window.height*0.02;//50; // Height of each palette box
 
 
     //HUE PICKED BY CHOSEN GLOBAL PALETTE
@@ -822,6 +853,8 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
     const l = round(lightness(selectedColor)); // Get the lightness
     
     if(debugMode){ console.log(`HSL Values - H: ${h}, S: ${s}, L: ${l}`)};
+      // Debugging: Log the selectedPaletteIndex
+   if(debugMode){console.log(`Selected Palette Index: ${selectedPaletteIndex}`)};
 
 /////FILL OPTIONS/////
     //use averages from captured data as hue/sat/bri values
@@ -833,10 +866,8 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
     //use fill from global palette choice 
     fill(h,s,l);
 
-
-    //palette boxes
-    rect(sensorIndex * boxWidth, 0, boxWidth, boxHeight);
-    
+     //palette boxes
+  rect(sensorIndex * boxWidth, 0, boxWidth, boxHeight);
 
 
   // Draw a circular line graph for the specific sensor
@@ -849,7 +880,6 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
   //const colorHue = sensorIndex === highlightIndex ? 60 : 200; // Highlight color for the highest average
   //const colorHue = average; // Set hue based on the average value of each sensor (0-360)
   
-
   if(brushMode)
     {
       brush.noField();
