@@ -470,6 +470,7 @@ function displayPalettes() {
 if(button1State === 1){ //if btn1 is pressed go to the capture screen
   setGlobalPalette();
   capturedData = []; //clear out the dataset for next time.
+  imageSaved = false;
   viewMode = captureScreen; 
 };
 if(button2State === 1){ //if btn2 is pressed shuffle the palettes
@@ -483,7 +484,7 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   noStroke();
   const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
   const paletteHeight = height *0.07; // Adjusted height for each palette block
-  const margin = width * 0.09; // Adjusted margin between palettes
+  const margin = width * 0.07; // Adjusted margin between palettes
   const startX = margin; // Starting X position
   const startY = height - (paletteHeight + margin) * 3.7; // Starting Y position for 4 rows
 
@@ -493,7 +494,7 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
     const row = floor(i / 2); // Row index (0 to 3)
 
     // Calculate position for each palette block
-    const x = startX + col * (width / 2);
+    const x = startX + col * (width *0.55); // *0.55 is an alignment hack
     const y = startY + (paletteHeight + margin) * row;
 
     // Draw each color in the palette
@@ -532,17 +533,17 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   if(button2State === 1){fill(0, 0, 60)}else{noFill()};
   stroke(0, 0, 60); // Set fill color to grey in HSB
   
-  ellipse(startX, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
+  ellipse(startX + margin*0.5, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
   
  
-  ellipse(width - startX, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
+  ellipse(width - startX - margin*0.5, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
  
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
   textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
-  text("shuffle colours", startX, startY - paletteHeight * 3); // Label first circle above the circle
-  text("select a palette", width - startX, startY - paletteHeight * 3); // Label second circle above the circle
+  text("refresh palettes", startX + margin*0.5, startY - paletteHeight * 3); // Label first circle above the circle
+  text("select palette", width - startX - margin*0.5, startY - paletteHeight * 3); // Label second circle above the circle
 
 
 }
@@ -578,8 +579,12 @@ function setGlobalPalette() {
 let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
 let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
+let imageSaved = false;
 
 function drawWeave() {
+
+  if(button1State === 7 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
+  if(button2State === 1){verticalOffset = 0;viewMode = startScreen}
 
   const boxHeight = 10;//map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
@@ -633,7 +638,7 @@ function drawWeave() {
          //palette boxes
          let paletteBoxWidth = width/sensors.length
          let palleteBoxHeight = height*0.02
-         rect(i * paletteBoxWidth, 0, paletteBoxWidth, palleteBoxHeight);
+         rect(i * paletteBoxWidth, height-palleteBoxHeight, paletteBoxWidth, palleteBoxHeight);
 
 
     // Increment the x position for the next box
