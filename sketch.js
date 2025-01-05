@@ -492,7 +492,7 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   const startY = height - (paletteHeight + margin) * 3.7; // Starting Y position for 4 rows
 
   // Draw the full hue range color bar
-  const hueBarWidth = width - 2 * margin; // Width of the hue bar
+  const hueBarWidth = (width) - 2 * margin - width*0.03; // Width of the hue bar
   const hueBarHeight = paletteHeight*0.7; // Height of the hue bar
   const hueBarY = startY - hueBarHeight - margin; // Y position for the hue bar
 
@@ -567,14 +567,14 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   ellipse(startX + margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
   
  
-  ellipse(width - startX - margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
+  ellipse(width - startX - margin*0.8, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
  
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
   textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
   text("refresh palettes", startX + margin*2, startY - paletteHeight * 3.5); // Label first circle above the circle
-  text("select palette", width - startX - margin*2, startY - paletteHeight * 3.5); // Label second circle above the circle
+  text("select palette", width - startX - margin*2.2, startY - paletteHeight * 3.5); // Label second circle above the circle
 
 
 }
