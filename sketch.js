@@ -251,10 +251,10 @@ function gotData() {
 //button 1 = index 8
 //button 2 = index 9
 
-button1State = splitVal[8];
-button2State = splitVal[9];
+button1State = splitVal[9];
+button2State = splitVal[8];
 
-if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
+//if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
 
 }
 
@@ -466,6 +466,8 @@ function generateRandomPalettes() {
 
 function displayPalettes() {
 
+  if (debugMode){console.log(sensors.toString())};
+
   //check for button presses
 if(button1State === 1){ //if btn1 is pressed go to the capture screen
   setGlobalPalette();
@@ -476,8 +478,6 @@ if(button1State === 1){ //if btn1 is pressed go to the capture screen
 if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   generateRandomColorRamps(); /// TO DO - CYCLE ONLY ONCE.
 };
-
-
 
 
   background(backgroundColor);
@@ -503,17 +503,8 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
       rect(x + j * paletteWidth, y, paletteWidth, paletteHeight); // Draw color block
     }
 
-      // Draw a white border around the selected palette
-      if (selectedPaletteIndex === i+1) { // Correctly check if this palette is selected
-        strokeWeight(5); // Set stroke weight for the border
-        stroke(0,0,70); // Set stroke color to white
-        noFill(); // Ensure no fill for the border
-        rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette
-      } else {
-        noStroke(); // Ensure no stroke for non-selected palettes
-      }
 
-  // Find the sensor with the highest reading and set selectedPaletteIndex accordingly
+    // Find the sensor with the highest reading and set selectedPaletteIndex accordingly
   //THIS IS FOR USING THE SENSORS AS INPUTS 1-8
   
   let highestReading = 0;
@@ -526,6 +517,20 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   }
   selectedPaletteIndex = highestReadingIndex + 1; // Adjust index to match palette numbering
 
+
+      // Draw a white border around the selected palette if a sensor is detected
+      if (selectedPaletteIndex === i+1 && highestReading > 40) { // Check if this palette is selected and a sensor is detected
+      //if (selectedPaletteIndex === i+1) { // Check if this palette is selected and a sensor is detected
+        
+      strokeWeight(5); // Set stroke weight for the border
+        stroke(0,0,70); // Set stroke color to white
+        noFill(); // Ensure no fill for the border
+        rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette
+      } else { 
+        noStroke(); // Ensure no stroke for non-selected palettes or if no sensor is detected
+      }
+
+  
     
   }
   // Draw 2 grey circles above the palettes at the top of the screen
@@ -583,10 +588,13 @@ let imageSaved = false;
 
 function drawWeave() {
 
+///UI
+  
+
   if(button1State === 7 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
   if(button2State === 1){verticalOffset = 0;viewMode = startScreen}
 
-  const boxHeight = 10;//map(mappedControllerValues[1], 0, 360, 0, 10); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
 
@@ -605,7 +613,7 @@ function drawWeave() {
 
   for (let i = 0; i < sensors.length; i++) {
     const sensorValue = sensors[i];
-    const boxWidth = map(sensorValue, 0, 100, 0, width / 2); // Map sensor value to box width
+    const boxWidth = map(sensorValue, 0, maxDataValue, 0, width / 2); // Map sensor value to box width
 
     // Draw the box
     noStroke();
@@ -627,6 +635,7 @@ function drawWeave() {
     const h = hue(selectedColor); // Get the hue
     const s = saturation(selectedColor); // Get the saturation
     const l = lightness(selectedColor); // Get the lightness
+
     fill(h,s,l*1.5);  //hack to match lightness value
 
     //draw the boxes

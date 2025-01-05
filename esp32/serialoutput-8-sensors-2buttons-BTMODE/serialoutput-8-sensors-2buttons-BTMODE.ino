@@ -310,21 +310,21 @@ int rangeMax = 360; //HSB range (0-360)
 //RAW ESP32 SETTINGS (NO CONDUCTIVE CONNECTIONS)
 
 
-int range0 = map(tlSensors.getRaw(0), 3400, 1000, 0, rangeMax);//ORANGE // (input, min, max, rangemin, rangemax)
+int range0 = map(tlSensors.getRaw(0), 8000, 1000, 0, rangeMax);//BLACK // (input, min, max, rangemin, rangemax)
 
-int range1 = map(tlSensors.getRaw(1), 4000, 1000, 0, rangeMax);//BLUE
+int range1 = map(tlSensors.getRaw(1), 8200, 1000, 0, rangeMax);//YELLOW
 
-int range2 = map(tlSensors.getRaw(2), 3600, 600, 0, rangeMax);//PLANT1
+int range2 = map(tlSensors.getRaw(2), 3600, 600, 0, rangeMax);//
 
-int range3 = map(tlSensors.getRaw(3), 4800, 1500, 0, rangeMax);//PLANT2
+int range3 = map(tlSensors.getRaw(3), 4800, 1500, 0, rangeMax);//
 
-int range4 = map(tlSensors.getRaw(4), 3800, 1500, 0, rangeMax);//WHITE
+int range4 = map(tlSensors.getRaw(4), 3800, 1500, 0, rangeMax);//
 
-int range5 = map(tlSensors.getRaw(5), 3800, 1500, 0, rangeMax);//BLACK
+int range5 = map(tlSensors.getRaw(5), 3800, 1500, 0, rangeMax);//
 
-int range6 = map(tlSensors.getRaw(6), 3800, 1500, 0, rangeMax);//BROWN
+int range6 = map(tlSensors.getRaw(6), 3800, 1500, 0, rangeMax);//
 
-int range7 = map(tlSensors.getRaw(7), 4200, 2000, 0, rangeMax);//RED
+int range7 = map(tlSensors.getRaw(7), 4200, 2000, 0, rangeMax);//
 
 
 
@@ -339,7 +339,7 @@ if (range6 < 11) {range6 = 0;}; if (range6 >rangeMax) {range6 = rangeMax;}
 if (range7 < 11) {range7 = 0;}; if (range7 >rangeMax) {range7 = rangeMax;}
 
 //output RAW sensor values
-
+/*
 Serial.print(tlSensors.getRaw(0));Serial.print(",");
 Serial.print(tlSensors.getRaw(1));Serial.print(",");
 Serial.print(tlSensors.getRaw(2));Serial.print(",");
@@ -349,7 +349,7 @@ Serial.print(tlSensors.getRaw(5));Serial.print(",");
 Serial.print(tlSensors.getRaw(6));Serial.print(",");
 Serial.println(tlSensors.getRaw(7));
 
-
+*/
 
 
     // Store the current readings in the arrays

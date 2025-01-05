@@ -109,7 +109,7 @@ void setup() {
 Serial.begin(9600); //9600 is the deafult for p5.serialserver/webserial
 
 //BLUETOOTH
-SerialBT.begin("ESP32LITEBT"); //Bluetooth device name
+SerialBT.begin("GENWEAVE"); //Bluetooth device name
 
 
 /* WEAVEMACHINE VALUES
@@ -120,147 +120,109 @@ SerialBT.begin("ESP32LITEBT"); //Bluetooth device name
          */
         tlSensors.initialize(0, TLSampleMethodTouchRead);
         tlSensors.data[0].tlStructSampleMethod.touchRead.pin =         32;
-        tlSensors.data[0].releasedToApproachedThreshold =              868;
-        tlSensors.data[0].approachedToReleasedThreshold =              782;
-        tlSensors.data[0].approachedToPressedThreshold =               36524;
-        tlSensors.data[0].pressedToApproachedThreshold =               32872;
-        tlSensors.data[0].calibratedMaxDelta =                         79725;
+        tlSensors.data[0].releasedToApproachedThreshold =              245;
+        tlSensors.data[0].approachedToReleasedThreshold =              221;
+        tlSensors.data[0].approachedToPressedThreshold =               27652;
+        tlSensors.data[0].pressedToApproachedThreshold =               24887;
+        tlSensors.data[0].calibratedMaxDelta =                         56566;
         tlSensors.data[0].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 1:
-         * Type: capacitive (touchRead() method)
-         * Pin: 33
-         */
-        tlSensors.initialize(1, TLSampleMethodTouchRead);
-        tlSensors.data[1].tlStructSampleMethod.touchRead.pin =         33;
-        tlSensors.data[1].releasedToApproachedThreshold =              465;
-        tlSensors.data[1].approachedToReleasedThreshold =              419;
-        tlSensors.data[1].approachedToPressedThreshold =               33313;
-        tlSensors.data[1].pressedToApproachedThreshold =               29982;
-        tlSensors.data[1].calibratedMaxDelta =                         71132;
-        tlSensors.data[1].filterType = TLStruct::filterTypeAverage;
-
-
-/*END WEAVE MACHINE VALUES*/
-
-         
-        /*
-         * Configuration for sensor 0:
          * Type: capacitive (touchRead() method)
          * Pin: 4
          */
-         /*
-          * PREVIOUS VALUES
-          
-        tlSensors.initialize(0, TLSampleMethodTouchRead);
-        tlSensors.data[0].tlStructSampleMethod.touchRead.pin =         27;
-        tlSensors.data[0].releasedToApproachedThreshold =              267;
-        tlSensors.data[0].approachedToReleasedThreshold =              240;
-        tlSensors.data[0].approachedToPressedThreshold =               19914;
-        tlSensors.data[0].pressedToApproachedThreshold =               17923;
-        tlSensors.data[0].calibratedMaxDelta =                         41101;
-        tlSensors.data[0].filterType = TLStruct::filterTypeAverage;
-
-        /*
-         * Configuration for sensor 1:
-         * Type: capacitive (touchRead() method)
-         * Pin: 15
-         * 
-         * PREVIOUS VALUES
-         
         tlSensors.initialize(1, TLSampleMethodTouchRead);
-        tlSensors.data[1].tlStructSampleMethod.touchRead.pin =         32;
-        tlSensors.data[1].releasedToApproachedThreshold =              488;
-        tlSensors.data[1].approachedToReleasedThreshold =              439;
-        tlSensors.data[1].approachedToPressedThreshold =               14106;
-        tlSensors.data[1].pressedToApproachedThreshold =               12695;
-        tlSensors.data[1].calibratedMaxDelta =                         28923;
+        tlSensors.data[1].tlStructSampleMethod.touchRead.pin =         4;
+        tlSensors.data[1].releasedToApproachedThreshold =              211;
+        tlSensors.data[1].approachedToReleasedThreshold =              191;
+        tlSensors.data[1].approachedToPressedThreshold =               27556;
+        tlSensors.data[1].pressedToApproachedThreshold =               24800;
+        tlSensors.data[1].calibratedMaxDelta =                         56093;
         tlSensors.data[1].filterType = TLStruct::filterTypeAverage;
 
         /*
-         * 
          * Configuration for sensor 2:
          * Type: capacitive (touchRead() method)
-         * Pin: 13
+         * Pin: 33
          */
         tlSensors.initialize(2, TLSampleMethodTouchRead);
-        tlSensors.data[2].tlStructSampleMethod.touchRead.pin =         12;
-        tlSensors.data[2].releasedToApproachedThreshold =              636;
-        tlSensors.data[2].approachedToReleasedThreshold =              573;
-        tlSensors.data[2].approachedToPressedThreshold =               13292;
-        tlSensors.data[2].pressedToApproachedThreshold =               11963;
-        tlSensors.data[2].calibratedMaxDelta =                         27379;
+        tlSensors.data[2].tlStructSampleMethod.touchRead.pin =         33;
+        tlSensors.data[2].releasedToApproachedThreshold =              322;
+        tlSensors.data[2].approachedToReleasedThreshold =              291;
+        tlSensors.data[2].approachedToPressedThreshold =               30905;
+        tlSensors.data[2].pressedToApproachedThreshold =               27815;
+        tlSensors.data[2].calibratedMaxDelta =                         66022;
         tlSensors.data[2].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 3:
          * Type: capacitive (touchRead() method)
-         * Pin: 12
+         * Pin: 15
          */
         tlSensors.initialize(3, TLSampleMethodTouchRead);
-        tlSensors.data[3].tlStructSampleMethod.touchRead.pin =         4;
-        tlSensors.data[3].releasedToApproachedThreshold =              483;
-        tlSensors.data[3].approachedToReleasedThreshold =              435;
-        tlSensors.data[3].approachedToPressedThreshold =               12659;
-        tlSensors.data[3].pressedToApproachedThreshold =               11393;
-        tlSensors.data[3].calibratedMaxDelta =                         25866;
+        tlSensors.data[3].tlStructSampleMethod.touchRead.pin =         15;
+        tlSensors.data[3].releasedToApproachedThreshold =              118;
+        tlSensors.data[3].approachedToReleasedThreshold =              107;
+        tlSensors.data[3].approachedToPressedThreshold =               26160;
+        tlSensors.data[3].pressedToApproachedThreshold =               23544;
+        tlSensors.data[3].calibratedMaxDelta =                         53331;
         tlSensors.data[3].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 4:
          * Type: capacitive (touchRead() method)
-         * Pin: 14
+         * Pin: 27
          */
         tlSensors.initialize(4, TLSampleMethodTouchRead);
-        tlSensors.data[4].tlStructSampleMethod.touchRead.pin =         13;
-        tlSensors.data[4].releasedToApproachedThreshold =              258;
-        tlSensors.data[4].approachedToReleasedThreshold =              233;
-        tlSensors.data[4].approachedToPressedThreshold =               13593;
-        tlSensors.data[4].pressedToApproachedThreshold =               12234;
-        tlSensors.data[4].calibratedMaxDelta =                         27944;
+        tlSensors.data[4].tlStructSampleMethod.touchRead.pin =         27;
+        tlSensors.data[4].releasedToApproachedThreshold =              315;
+        tlSensors.data[4].approachedToReleasedThreshold =              284;
+        tlSensors.data[4].approachedToPressedThreshold =               36661;
+        tlSensors.data[4].pressedToApproachedThreshold =               32995;
+        tlSensors.data[4].calibratedMaxDelta =                         74149;
         tlSensors.data[4].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 5:
          * Type: capacitive (touchRead() method)
-         * Pin: 27
+         * Pin: 13
          */
         tlSensors.initialize(5, TLSampleMethodTouchRead);
-        tlSensors.data[5].tlStructSampleMethod.touchRead.pin =         14;
-        tlSensors.data[5].releasedToApproachedThreshold =              520;
-        tlSensors.data[5].approachedToReleasedThreshold =              468;
-        tlSensors.data[5].approachedToPressedThreshold =               12104;
-        tlSensors.data[5].pressedToApproachedThreshold =               10894;
-        tlSensors.data[5].calibratedMaxDelta =                         25198;
+        tlSensors.data[5].tlStructSampleMethod.touchRead.pin =         13;
+        tlSensors.data[5].releasedToApproachedThreshold =              305;
+        tlSensors.data[5].approachedToReleasedThreshold =              275;
+        tlSensors.data[5].approachedToPressedThreshold =               28772;
+        tlSensors.data[5].pressedToApproachedThreshold =               25895;
+        tlSensors.data[5].calibratedMaxDelta =                         58262;
         tlSensors.data[5].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 6:
          * Type: capacitive (touchRead() method)
-         * Pin: 33
+         * Pin: 14
          */
         tlSensors.initialize(6, TLSampleMethodTouchRead);
-        tlSensors.data[6].tlStructSampleMethod.touchRead.pin =         15;
-        tlSensors.data[6].releasedToApproachedThreshold =              61;
-        tlSensors.data[6].approachedToReleasedThreshold =              55;
-        tlSensors.data[6].approachedToPressedThreshold =               13631;
-        tlSensors.data[6].pressedToApproachedThreshold =               12268;
-        tlSensors.data[6].calibratedMaxDelta =                         27847;
+        tlSensors.data[6].tlStructSampleMethod.touchRead.pin =         14;
+        tlSensors.data[6].releasedToApproachedThreshold =              105;
+        tlSensors.data[6].approachedToReleasedThreshold =              95;
+        tlSensors.data[6].approachedToPressedThreshold =               38122;
+        tlSensors.data[6].pressedToApproachedThreshold =               34310;
+        tlSensors.data[6].calibratedMaxDelta =                         77398;
         tlSensors.data[6].filterType = TLStruct::filterTypeAverage;
 
         /*
          * Configuration for sensor 7:
          * Type: capacitive (touchRead() method)
-         * Pin: 32
+         * Pin: 12
          */
         tlSensors.initialize(7, TLSampleMethodTouchRead);
-        tlSensors.data[7].tlStructSampleMethod.touchRead.pin =         27;
-        tlSensors.data[7].releasedToApproachedThreshold =              168;
-        tlSensors.data[7].approachedToReleasedThreshold =              152;
-        tlSensors.data[7].approachedToPressedThreshold =               14903;
-        tlSensors.data[7].pressedToApproachedThreshold =               13413;
-        tlSensors.data[7].calibratedMaxDelta =                         30380;
+        tlSensors.data[7].tlStructSampleMethod.touchRead.pin =         12;
+        tlSensors.data[7].releasedToApproachedThreshold =              394;
+        tlSensors.data[7].approachedToReleasedThreshold =              355;
+        tlSensors.data[7].approachedToPressedThreshold =               32836;
+        tlSensors.data[7].pressedToApproachedThreshold =               29552;
+        tlSensors.data[7].calibratedMaxDelta =                         66316;
         tlSensors.data[7].filterType = TLStruct::filterTypeAverage;
 
        
@@ -310,21 +272,21 @@ int rangeMax = 360; //HSB range (0-360)
 //RAW ESP32 SETTINGS (NO CONDUCTIVE CONNECTIONS)
 
 
-int range0 = map(tlSensors.getRaw(0), 3400, 1000, 0, rangeMax);//ORANGE // (input, min, max, rangemin, rangemax)
+int range0 = map(tlSensors.getRaw(0), 7200, 4400, 0, rangeMax);//BLACK // (input, min, max, rangemin, rangemax)
 
-int range1 = map(tlSensors.getRaw(1), 4000, 1000, 0, rangeMax);//BLUE
+int range1 = map(tlSensors.getRaw(1), 6500, 3500, 0, rangeMax);//YELLOW
 
-int range2 = map(tlSensors.getRaw(2), 3600, 600, 0, rangeMax);//PLANT1
+int range2 = map(tlSensors.getRaw(2), 8000, 4500, 0, rangeMax);//
 
-int range3 = map(tlSensors.getRaw(3), 4800, 1500, 0, rangeMax);//PLANT2
+int range3 = map(tlSensors.getRaw(3), 6200, 3700, 0, rangeMax);//
 
-int range4 = map(tlSensors.getRaw(4), 3800, 1500, 0, rangeMax);//WHITE
+int range4 = map(tlSensors.getRaw(4), 8600, 4700, 0, rangeMax);//
 
-int range5 = map(tlSensors.getRaw(5), 3800, 1500, 0, rangeMax);//BLACK
+int range5 = map(tlSensors.getRaw(5), 6700, 4000, 0, rangeMax);//
 
-int range6 = map(tlSensors.getRaw(6), 3800, 1500, 0, rangeMax);//BROWN
+int range6 = map(tlSensors.getRaw(6), 8700, 5000, 0, rangeMax);//
 
-int range7 = map(tlSensors.getRaw(7), 4200, 2000, 0, rangeMax);//RED
+int range7 = map(tlSensors.getRaw(7), 7400, 4000, 0, rangeMax);//
 
 
 
@@ -339,7 +301,7 @@ if (range6 < 11) {range6 = 0;}; if (range6 >rangeMax) {range6 = rangeMax;}
 if (range7 < 11) {range7 = 0;}; if (range7 >rangeMax) {range7 = rangeMax;}
 
 //output RAW sensor values
-
+/*
 Serial.print(tlSensors.getRaw(0));Serial.print(",");
 Serial.print(tlSensors.getRaw(1));Serial.print(",");
 Serial.print(tlSensors.getRaw(2));Serial.print(",");
@@ -348,7 +310,16 @@ Serial.print(tlSensors.getRaw(4));Serial.print(",");
 Serial.print(tlSensors.getRaw(5));Serial.print(",");
 Serial.print(tlSensors.getRaw(6));Serial.print(",");
 Serial.println(tlSensors.getRaw(7));
-
+//ALSO BT
+SerialBT.print(tlSensors.getRaw(0));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(1));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(2));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(3));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(4));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(5));SerialBT.print(",");
+SerialBT.print(tlSensors.getRaw(6));SerialBT.print(",");
+SerialBT.println(tlSensors.getRaw(7));
+*/
 
 
 
