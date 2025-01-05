@@ -464,6 +464,9 @@ function generateRandomPalettes() {
 
 ////DISPLAY PALETTES
 
+// Global flag to indicate if the sensor value for hue is the default option
+let useSensorHue = true; // Enabled by default
+
 function displayPalettes() {
 
   if (debugMode){console.log(sensors.toString())};
@@ -484,9 +487,32 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   noStroke();
   const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
   const paletteHeight = height *0.07; // Adjusted height for each palette block
-  const margin = width * 0.07; // Adjusted margin between palettes
+  const margin = width * 0.06; // Adjusted margin between palettes
   const startX = margin; // Starting X position
   const startY = height - (paletteHeight + margin) * 3.7; // Starting Y position for 4 rows
+
+  // Draw the full hue range color bar
+  const hueBarWidth = width - 2 * margin; // Width of the hue bar
+  const hueBarHeight = paletteHeight*0.7; // Height of the hue bar
+  const hueBarY = startY - hueBarHeight - margin; // Y position for the hue bar
+
+  // Draw the hue bar
+  for (let h = 0; h < 360; h++) {
+      fill(h, 100, 100); // Set fill color based on hue
+      rect(startX + h * (hueBarWidth / 360), hueBarY, hueBarWidth / 360, hueBarHeight); // Draw a rectangle for the hue
+  }
+
+   // Draw a white box around the hue bar to indicate it's the default option
+   if (sensors.every(sensor => sensor <= 40)) { // Check if no sensors are being touched (with a threshold allowance)
+     stroke(0,0,70); // White color for the box
+     strokeWeight(5);
+     noFill();
+     rect(startX - 2, hueBarY - 2, hueBarWidth + 4, hueBarHeight + 4); // Draw the box
+     useSensorHue = true;
+   } else {useSensorHue = false};
+    if(debugMode){console.log("sensor hue mode: " + useSensorHue)};
+
+
 
   for (let i = 0; i < 8; i++) { // Limit to display 4 rows of 2 palettes
     noStroke();
@@ -538,17 +564,17 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   if(button2State === 1){fill(0, 0, 60)}else{noFill()};
   stroke(0, 0, 60); // Set fill color to grey in HSB
   
-  ellipse(startX + margin*0.5, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
+  ellipse(startX + margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
   
  
-  ellipse(width - startX - margin*0.5, startY - paletteHeight * 2, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
+  ellipse(width - startX - margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
  
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
   textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
-  text("refresh palettes", startX + margin*0.5, startY - paletteHeight * 3); // Label first circle above the circle
-  text("select palette", width - startX - margin*0.5, startY - paletteHeight * 3); // Label second circle above the circle
+  text("refresh palettes", startX + margin*2, startY - paletteHeight * 3.5); // Label first circle above the circle
+  text("select palette", width - startX - margin*2, startY - paletteHeight * 3.5); // Label second circle above the circle
 
 
 }
@@ -618,9 +644,10 @@ function drawWeave() {
     // Draw the box
     noStroke();
 
-    //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL 
-    //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
-
+    //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL
+    if(useSensorHue) {
+      fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+    } else{
     //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
     //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
     
@@ -637,7 +664,7 @@ function drawWeave() {
     const l = lightness(selectedColor); // Get the lightness
 
     fill(h,s,l*1.5);  //hack to match lightness value
-
+    }
     //draw the boxes
     rect(currentX, startY - verticalOffset, boxWidth, boxHeight);
     
