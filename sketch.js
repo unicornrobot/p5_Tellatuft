@@ -204,9 +204,9 @@ function draw() {
       break;
     case 5:
 
-      //drawDashboard(); //dataviz dashboard
+      drawDashboard(); //dataviz dashboard
 
-      drawResultsScreen(); //Becky mode
+      //drawResultsScreen(); //Becky mode
      
       break;
     case 6: 
@@ -572,9 +572,9 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
-  textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
-  text("refresh palettes", startX + margin*2, startY - paletteHeight * 3.5); // Label first circle above the circle
-  text("select palette", width - startX - margin*2.2, startY - paletteHeight * 3.5); // Label second circle above the circle
+  textSize(paletteHeight / 3); // Set text size proportionally to paletteHeight
+  text("new", startX + margin*1.5, startY - paletteHeight * 3.5); // Label first circle above the circle
+  text("go", width - startX - margin*1.7, startY - paletteHeight * 3.5); // Label second circle above the circle
 
 
 }
@@ -617,8 +617,9 @@ function drawWeave() {
 ///UI
   
 
-  if(button1State === 7 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
-  if(button2State === 1){verticalOffset = 0;viewMode = startScreen}
+  if(button1State === 6 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
+  //if(button1State === 3 ){verticalOffset = 0;viewMode = resultsScreen}//data screen
+  if(button2State === 1){verticalOffset = 0;viewMode = resultsScreen}//back button
 
   const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
@@ -1005,6 +1006,8 @@ if(brushMode){noLoop()};
 let dashDrawOnce = false;
 
 function drawDashboard(){
+  if (button1State === 3){viewMode = startScreen};
+
 if(!dashDrawOnce){
 
 isCapturing = false;
@@ -1102,7 +1105,7 @@ blendMode(BLEND)
      fill(colorHue, 100, 100, 100); // Fill color based on mapped controller value
       noStroke();
     }else{
-      strokeWeight(3)
+      strokeWeight(0.5)
       stroke(colorHue, 100, 100); // stroke color based on mapped controller value
       fill(colorHue, 100, 100, 10); // stroke color based on mapped controller value
 
