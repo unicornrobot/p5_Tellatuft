@@ -998,10 +998,26 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
 if(brushMode){noLoop()}; 
 }
 
-
 /////////////////////////
 ///////DASHBOARD DATA VIZ MODE ////
 ////////////////////////////
+
+function getColorValues(index) {
+  // Ensure the index is within the bounds of the currentPalette array
+  if (index < 0 || index >= currentPalette.length) {
+    console.error("Index out of bounds for currentPalette.");
+    return null; // Return null or handle the error as needed
+  }
+
+  // Get the selected color from the current palette
+  const selectedColor = currentPalette[index]; // Get the color object
+  const h = hue(selectedColor); // Get the hue
+  const s = saturation(selectedColor); // Get the saturation
+  const l = lightness(selectedColor); // Get the lightness
+
+  // Return the values as an object
+  return { h, s, l };
+}
 
 let dashDrawOnce = false;
 
@@ -1027,16 +1043,17 @@ if(debugMode){console.log(capturedData)};
 
     //draw once
     dashDrawOnce = true;   
-    drawCircularLineGraph(width*0.2, height*0.4 ,0.08); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+    drawCircularLineGraph(width*0.5, height*0.2 ,0.05); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
                           //width*0.2, height*0.27 ,0.08
-    drawSensorLineRipples(width*0.8,height*0.4,0.10);//x,y,max
+    drawSensorLineRipples(width*0.5,height*0.5,0.05);//x,y,max
                         //width*0.5,height*0.27,0.10
-    drawLineGraph(height*0.20); //max
 
-    drawConcentricArcs(width*0.5, height*0.4, 0.4);//x,y,max
+    drawConcentricArcs(width*0.5, height*0.7, 0.03);//x,y,max
                       //width*0.8, height*0.27, 0.3
 
     drawSensorBoxesAndBars();
+
+    drawLineGraph(); //max
 
   }
   
@@ -1050,27 +1067,43 @@ if(debugMode){console.log(capturedData)};
 
 //COMBINED LINE GRAPHS
 function drawLineGraph(max) {
-  const maxGraphHeight = height*0.10;//max; // Set a maximum height for the graph
+  const maxGraphHeight = height*0.10; // Set a maximum height for the graph
   const graphHeight = min(height * 0.8, maxGraphHeight); // Constrain the graph height
   const graphWidth = width; // Full width of the canvas
   const leftMargin = width * 0.01; // Left margin for the graph
   const rightMargin = width * 0.01; // Right margin for the graph
-  const topMargin = height * 0.01; // Top margin for the graph
+  const bottomMargin = height * 0.02; // Bottom margin for the graph
+
+  // Adjust the graph position to the bottom of the screen
+  const graphY = height - bottomMargin - graphHeight; // Position the graph at the bottom
+
+  
 
   // Draw bounding box
   stroke(0, 0, 80, 50);
-  strokeWeight(0.5);
+  strokeWeight(1);
   noFill();
-  //rect(leftMargin, topMargin, graphWidth - leftMargin - rightMargin, graphHeight);
+  //rect(leftMargin, graphY, graphWidth - leftMargin - rightMargin, graphHeight);
 
   // Draw the line graph for each sensor
   for (let i = 0; i < totalInputs; i++) {
+
+  //get current palette
+  const selectedColor = getColorValues(i);
+
     beginShape();
     for (let j = 0; j < capturedData.length; j++) {
-      stroke(i * 30 % 360, 100, 100, map(capturedData[j][i], 0, 360, 30, 80)); // Set color based on sensor index
+      //stroke(i * 30 % 360, 100, 100, map(capturedData[j][i], 0, 360, 30, 80)); // Set color based on sensor index
+      if(useSensorHue){
+        stroke(averages[i], 100, 100, 70)
+      }else { 
+      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+      }
+
       strokeWeight(map(capturedData[j][i], 0, 360, 1, 4));
       const x = map(j, 0, capturedData.length - 1, leftMargin, graphWidth - rightMargin);
-      const y = map(capturedData[j][i], -10, 350, topMargin, topMargin + graphHeight);
+      // Flip the y value to position the lowest value nearest the bottom
+      const y = map(capturedData[j][i], -10, 350, graphY + graphHeight, graphY);
       curveVertex(x, y);
     }
     endShape();
@@ -1098,19 +1131,27 @@ blendMode(BLEND)
    
     const colorHue = averageValue;//map(mappedControllerValues[2], 0, maxDataValue, 0, 360); // Set hue based on average value
     
+    //get current palette
+    let selectedColor = getColorValues(i);
+    
     //const alpha = map(mappedControllerValues[9], 0, 360, 5, 40); // Alpha value
     //fill(averageValue, 100, 100, alpha); // Fill color based on average hue
     //let alpha = 50;
-    if(toggleOutline){
-     fill(colorHue, 100, 100, 100); // Fill color based on mapped controller value
-      noStroke();
-    }else{
+    
       strokeWeight(0.5)
-      stroke(colorHue, 100, 100); // stroke color based on mapped controller value
-      fill(colorHue, 100, 100, 10); // stroke color based on mapped controller value
+      //stroke(colorHue, 100, 100); // stroke color based on mapped controller value
+      //fill(colorHue, 100, 100, 10); // stroke color based on mapped controller value
+
+      if(useSensorHue){
+        stroke(averages[i], 100, 100, 70)
+        fill(averages[i], 100, 100, 10);
+      }else { 
+      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+      fill(selectedColor.h,selectedColor.s,selectedColor.l*1.5, 10);
+      }
 
       //noFill();
-    }
+    
 
     beginShape(); // Start drawing the line graph
     for (let j = 0; j < capturedData.length; j++) {
@@ -1134,36 +1175,6 @@ if(debugMode){
   //prevent repeat console logs
   runOnce = true;
 }
-function drawDataPie(x,y,max) {
-  const totalInputs = sensors.length; // Total number of inputs
-  const centerX = x;//width *0.9;  //  width / 2; // X center of the concentric rings
-  const centerY = y;//height * 0.2; //height / 2; // Y center of the concentric rings
-  const radius = min(width, height) * max;//0.10; // Maximum radius for the outermost ring 0.4 for full
-  
-  // Calculate the average value for each sensor
-  const averages = sensors.map((_, i) => {
-    const sensorData = capturedData.map(data => data[i]);
-    return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;
-  });
-
-  // Calculate the total of all averages to determine segment sizes
-  const totalAverage = averages.reduce((sum, avg) => sum + avg, 0);
-
-  let startAngle = 0; // Starting angle for the first segment
-
-  const spacing = 0.1; // Define the spacing between segments
-  for (let i = 0; i < totalInputs; i++) {
-    const segmentSize = (averages[i] / totalAverage) * TWO_PI; // Proportional segment size
-    const colorHue = map(i, 0, totalInputs, 0, 360); // Generate a color hue based on the sensor index
-    fill(colorHue, 100, 100, 20); // Set fill color based on the hue
-
-    // Draw the pie chart segment with spacing, including spacing at the center
-    arc(centerX, centerY, radius * 2 - spacing, radius * 2 - spacing, startAngle + spacing / 2, startAngle + segmentSize - spacing / 2, PIE);
-
-    // Update the start angle for the next segment
-    startAngle += segmentSize;
-  }
-}
 
 function drawSensorLineRipples(x,y,max) {
   const centerX = x;
@@ -1177,8 +1188,17 @@ function drawSensorLineRipples(x,y,max) {
       const xEnd = centerX + cos(angle) * length; // Calculate end x position
       const yEnd = centerY + sin(angle) * length; // Calculate end y position
 
+      //get current palette
+      const selectedColor = getColorValues(i);
+
       strokeWeight(0.5);
-      stroke(i * 30 % 360, 100, 100,30); // Set stroke color based on sensor index
+      //stroke(i * 30 % 360, 100, 100,30); // Set stroke color based on sensor index
+      if(useSensorHue){
+        stroke(averages[i], 100, 100, 70)
+      }else { 
+      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+      }
+
       line(centerX, centerY, xEnd, yEnd); // Draw the line
 
       // Draw circles along the line based on captured data
@@ -1193,7 +1213,12 @@ function drawSensorLineRipples(x,y,max) {
 
           noFill(); // No fill for circles
           strokeWeight(1);
-          stroke(i * 30 % 360, 100, 100,20); // Set stroke color for circles
+          //stroke(i * 30 % 360, 100, 100,20); // Set stroke color for circles
+          if(useSensorHue){
+            stroke(averages[i], 100, 100, 70)
+          }else { 
+          stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5, 70)
+          }
           ellipse(xCircle, yCircle, circleSize); // Draw the circle
       }
   }
@@ -1205,6 +1230,9 @@ function drawConcentricArcs(x,y,max) {
   const maxRadius = min(width, height) * max; // Maximum radius for the outermost arc
   const arcSpacing = 20; // Spacing between arcs
 
+  //get current palette
+  //const selectedColor = getColorValues(i);
+
   for (let i = 0; i < capturedData.length; i++) {
       for (let j = 0; j < capturedData[i].length; j++) {
           const sensorValue = capturedData[i][j]; // Get the data value for the current sensor
@@ -1214,7 +1242,12 @@ function drawConcentricArcs(x,y,max) {
           const arcSize = radians(map(sensorValue,0,360,0,30));
 
           noFill(); // No fill for arcs
-          stroke(hueValue, 100, 100, 50); // Set stroke color based on mapped hue
+          //stroke(hueValue, 100, 100, 50); // Set stroke color based on mapped hue
+          if(useSensorHue){
+            stroke(averages[i], 100, 100, 50)
+          }else { 
+          //stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+          }
           strokeWeight(2); // Set stroke weight
 
           // Draw the arc with length based on sensor value
@@ -1223,6 +1256,8 @@ function drawConcentricArcs(x,y,max) {
   }
 }
 
+//ORIGINAL Boxes and bars
+/*
 function drawSensorBoxesAndBars() {
   const padding = width * 0.03;
   const boxWidth = (width - (totalInputs + 1) * padding) / totalInputs; // Calculate box width based on padding and total inputs
@@ -1335,6 +1370,182 @@ function drawSensorBoxesAndBars() {
     const lineSpacing = boxWidth / (numLines + 1); // Calculate spacing between lines
 
     
+  }
+}/*
+
+/*function drawDataPie(x,y,max) {
+  const totalInputs = sensors.length; // Total number of inputs
+  const centerX = x;//width *0.9;  //  width / 2; // X center of the concentric rings
+  const centerY = y;//height * 0.2; //height / 2; // Y center of the concentric rings
+  const radius = min(width, height) * max;//0.10; // Maximum radius for the outermost ring 0.4 for full
+  
+  // Calculate the average value for each sensor
+  const averages = sensors.map((_, i) => {
+    const sensorData = capturedData.map(data => data[i]);
+    return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;
+  });
+
+  // Calculate the total of all averages to determine segment sizes
+  const totalAverage = averages.reduce((sum, avg) => sum + avg, 0);
+
+  let startAngle = 0; // Starting angle for the first segment
+
+  const spacing = 0.1; // Define the spacing between segments
+  for (let i = 0; i < totalInputs; i++) {
+    const segmentSize = (averages[i] / totalAverage) * TWO_PI; // Proportional segment size
+    const colorHue = map(i, 0, totalInputs, 0, 360); // Generate a color hue based on the sensor index
+    fill(colorHue, 100, 100, 20); // Set fill color based on the hue
+
+    // Draw the pie chart segment with spacing, including spacing at the center
+    arc(centerX, centerY, radius * 2 - spacing, radius * 2 - spacing, startAngle + spacing / 2, startAngle + segmentSize - spacing / 2, PIE);
+
+    // Update the start angle for the next segment
+    startAngle += segmentSize;
+  }
+}*/
+
+//layout 2 - matches the locations of the weave sensors (2 columns  - 4 rows) 
+function drawSensorBoxesAndBars() {
+  const padding = height * 0.12; // Adjusted padding for less space between boxes
+  const boxWidth = (width - (2 + 2) * padding) / 5; // Adjusted for 4 columns to make boxes half the size
+  const boxHeight = height * 0.03; // Set a fixed height for the boxes
+  const offset = padding * 0.5; // Adjusted offset for boxes to be placed higher up the screen
+  const startY = height * 0.3;
+  textSize(width * 0.009);
+
+  for (let i = 0; i < totalInputs; i++) {
+    // Calculate x and y positions based on the new layout
+    const col = i % 2; // Column index (0 or 1)
+    const row = floor(i / 2); // Row index (0 to 3)
+    let x, y;
+    if (col === 0) {
+      x = padding + col * (boxWidth + padding); // Calculate x position for each box
+    } else {
+      x = width - padding - boxWidth; // Right justify the box in column 2
+    }
+    y = startY + (row * (boxHeight + padding)); // Adjusted y position for boxes to be placed higher up the screen
+
+    // Draw the sensor value inside the box
+    averages = sensors.map((_, i) => {
+      const sensorData = capturedData.map(data => data[i]);
+      return sensorData.reduce((sum, value) => sum + value, 0) / sensorData.length;      
+    });
+    // Find the sensor with the highest average
+    const highestAverage = Math.max(...averages);
+    const highestSensorIndex = averages.indexOf(highestAverage);
+
+    //get current palette
+    const selectedColor = currentPalette[i]; // Get the color object // (map the index to the palette number)
+
+    const h = hue(selectedColor); // Get the hue
+    const s = saturation(selectedColor); // Get the saturation
+    const l = lightness(selectedColor); // Get the lightness
+
+    // Draw the box
+    if(useSensorHue){
+      fill(averages[i], 100, 100, 70)}
+    else{ // Set fill color based on sensor index
+    fill(h,s,l*1.5)};  //hack to match lightness value
+
+    //
+
+    if (i == highestSensorIndex) { stroke(0, 0, 100); strokeWeight(4); } // Draw outline around highest sensor.
+    else { noStroke(); strokeWeight(1); }
+
+    rect(x, y - (offset), boxWidth, boxHeight); // Draw the box
+
+    // Text color
+    fill(0, 90, 0); // 0,0,100 - white
+    textAlign(LEFT, CENTER);
+    //text(round(averages[i]), x + (boxWidth * 0.03), y - (offset) + boxHeight / 2); // Display the average value in the center of the box
+
+    // LINE GRAPH
+    const graphWidth = boxWidth - (padding * 0.2); // Set the width for the small line graph
+    const graphHeight = boxHeight - (boxHeight * 0.01); // Set the height for the small line graph
+    const graphX = x + (padding * 0.1); // Center the graph horizontally within the box
+    const graphY = y - (offset); // Position the graph above the box with padding
+
+    // Draw the line graph
+    noFill();
+    stroke(0,0,80);//off-white
+    strokeWeight(2); // Set stroke weight
+    beginShape();
+    for (let j = 0; j < capturedData.length; j++) {
+      const sensorValue = capturedData[j][i]; // Get the data value for the current sensor
+      const xPos = map(j, 0, capturedData.length - 1, graphX, graphX + graphWidth); // Map the x position
+      const yPos = map(sensorValue, 0, 360, graphY + graphHeight - (boxHeight * 0.1), graphY + (boxHeight * 0.1)); // Map the y position
+      vertex(xPos, yPos); // Add vertex to the shape
+    }
+    endShape();
+
+    // PIE CHART
+    const pieChartRadius = boxWidth * 0.25; // Set the radius for the pie chart
+    let pieX, pieY; // Declare variables for pie chart position
+    if (col === 0) { // If in column 1
+      pieX = x - pieChartRadius; // Position the pie chart to the left of the box
+    } else { // If in column 2
+      pieX = x + boxWidth + pieChartRadius; // Position the pie chart to the right of the box
+    }
+    pieY = y - (offset) + boxHeight / 2; // Center the pie chart vertically with the box
+
+    // Draw the pie chart
+    noStroke();
+    if(useSensorHue){
+      fill(averages[i], 100, 100, 70)}
+    else{
+      fill(h,s,l*2)
+    }; // Set fill color based on sensor average
+    arc(pieX, pieY, pieChartRadius, pieChartRadius, -HALF_PI, TWO_PI * (averages[i] / 360) - HALF_PI, PIE); // Draw the pie chart based on the average value, starting at the top
+
+    // Draw the circle outline on the pie chart
+    noFill();
+    stroke(0, 0, 50); // Set stroke color to white
+    
+    ellipse(pieX, pieY, pieChartRadius, pieChartRadius); // Draw the circle outline
+
+    // Text for the sensor value
+    fill(0,70,0,60); // Set text background color to black
+    noStroke();
+    
+    rectMode(CENTER); // Set rect mode to center
+    let rectCornerRadius = 10;
+    //rect(pieX, pieY, pieChartRadius*0.4, pieChartRadius*0.3,rectCornerRadius,); // Draw a small dark background box for the text
+    ellipse(pieX, pieY, pieChartRadius*0.4, pieChartRadius*0.4);
+    fill(255); // Set text color to white
+    textAlign(CENTER, CENTER); // Center the text
+    text(round(averages[i]), pieX, pieY); // Display the average value in the center of the pie chart
+    rectMode(CORNER); // Return to default rect mode
+
+
+    // BARS
+    const barGraphHeight = height * 0.1; // Set a fixed height for the bar graph
+    const barX = x; // Use the same x position as the box
+    const barY = y - (offset) - barGraphHeight-(barGraphHeight*0.02); // Position the bar graph at the top of the box
+
+    // Calculate the width of each bar to fit within the box width
+    const numBars = capturedData.length;
+    const barWidth = boxWidth / numBars;
+
+    // Draw the bar graph
+    for (let j = 0; j < numBars; j++) {
+      const sensorValue = capturedData[j][i]; // Get the data value for the current sensor
+      const barHeight = barGraphHeight * (sensorValue / 360); // Scale the bar height based on the sensor value
+      if(useSensorHue){
+        //fill(sensorValue, map(sensorValue, 0, 360, 20, 80), map(sensorValue, 0, 360, 20, 80), 70); // Set fill color based on sensor value
+        fill(averages[i],map(sensorValue,0,360,20,80),map(sensorValue,0,360,20,80)) //
+    }else{
+        fill(h,s,l)
+    }
+      noStroke();
+      rect(barX + j * barWidth, barY + barGraphHeight - barHeight, barWidth, barHeight); // Draw each bar
+    }
+
+    // Draw multiple vertical lines inside the box, incrementally spaced
+    const lineColor = map(averages[i], 0, 360, 0, 360); // Map the average value to a color hue
+    stroke(lineColor, 100, 100); // Set stroke color based on mapped hue
+    strokeWeight(2);
+    const numLines = capturedData.length; // Number of lines to draw based on the data length
+    const lineSpacing = boxWidth / (numLines + 1); // Calculate spacing between lines
   }
 }
 
