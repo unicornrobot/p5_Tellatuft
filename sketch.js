@@ -37,8 +37,7 @@ let displayInfo = false;
 
 let backgroundColor =[0,0,10] //0,0,32 = grey / 10 dark grey
 
-let brushMode = false ; // enable p5 Brush mode - stops loop - needs fixing
-
+let brushMode = true ; // enable p5 Brush mode - stops loop - needs fixing
 
 let graphData = []; // Array to store historical data for each sensor
 //const maxDataPoints = 360; // Maximum number of data points to store for each sensor
@@ -210,10 +209,12 @@ function draw() {
      
       break;
     case 6: 
-      drawWaveformGarden();
+      //drawWaveformGarden();
+      drawResultsScreen(); //Becky mode
       break;
     case 7:
       displayPalettes();
+      dashDrawOnce = false;
       break;
   }
 
@@ -565,15 +566,13 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   stroke(0, 0, 60); // Set fill color to grey in HSB
   
   ellipse(startX + margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
-  
- 
   ellipse(width - startX - margin*0.8, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
  
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
   textSize(paletteHeight / 3); // Set text size proportionally to paletteHeight
-  text("new", startX + margin*1.5, startY - paletteHeight * 3.5); // Label first circle above the circle
+  text("refresh colours", startX + margin*1.5, startY - paletteHeight * 3.5); // Label first circle above the circle
   text("go", width - startX - margin*1.7, startY - paletteHeight * 3.5); // Label second circle above the circle
 
 
@@ -928,6 +927,7 @@ function drawBeckyMode(sensorIndex, x, y, width, height, average, highlightIndex
 
     //use fill from global palette choice 
     fill(h,s,l);
+    noStroke();
 
      //palette boxes
   rect(sensorIndex * boxWidth, 0, boxWidth, boxHeight);
@@ -1043,12 +1043,12 @@ if(debugMode){console.log(capturedData)};
 
     //draw once
     dashDrawOnce = true;   
-    drawCircularLineGraph(width*0.5, height*0.2 ,0.05); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
+    drawCircularLineGraph(width*0.5, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
                           //width*0.2, height*0.27 ,0.08
-    drawSensorLineRipples(width*0.5,height*0.5,0.05);//x,y,max
+    drawSensorLineRipples(width*0.5,height*0.45,0.1);//x,y,max
                         //width*0.5,height*0.27,0.10
 
-    drawConcentricArcs(width*0.5, height*0.7, 0.03);//x,y,max
+    drawConcentricArcs(width*0.5, height*0.45, 0.8);//x,y,max
                       //width*0.8, height*0.27, 0.3
 
     drawSensorBoxesAndBars();
@@ -1146,8 +1146,8 @@ blendMode(BLEND)
         stroke(averages[i], 100, 100, 70)
         fill(averages[i], 100, 100, 10);
       }else { 
-      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
-      fill(selectedColor.h,selectedColor.s,selectedColor.l*1.5, 10);
+      stroke(selectedColor.h,selectedColor.s,selectedColor.l*2)
+      fill(selectedColor.h,selectedColor.s,selectedColor.l*2, 10);
       }
 
       //noFill();
@@ -1180,6 +1180,7 @@ function drawSensorLineRipples(x,y,max) {
   const centerX = x;
   const centerY = y;
   const maxLength = min(width, height) * max; // Maximum length for the lines
+  const ringAlpha = 20;
 
   for (let i = 0; i < averages.length; i++) {
       const angle = map(i, 0, averages.length, 0, TWO_PI); // Calculate angle for each sensor
@@ -1194,9 +1195,9 @@ function drawSensorLineRipples(x,y,max) {
       strokeWeight(0.5);
       //stroke(i * 30 % 360, 100, 100,30); // Set stroke color based on sensor index
       if(useSensorHue){
-        stroke(averages[i], 100, 100, 70)
+        stroke(averages[i], 100, 100, ringAlpha)
       }else { 
-      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+      stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5,ringAlpha)
       }
 
       line(centerX, centerY, xEnd, yEnd); // Draw the line
@@ -1215,9 +1216,9 @@ function drawSensorLineRipples(x,y,max) {
           strokeWeight(1);
           //stroke(i * 30 % 360, 100, 100,20); // Set stroke color for circles
           if(useSensorHue){
-            stroke(averages[i], 100, 100, 70)
+            stroke(averages[i], 100, 100, ringAlpha)
           }else { 
-          stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5, 70)
+          stroke(selectedColor.h,selectedColor.s,selectedColor.l*2, ringAlpha)
           }
           ellipse(xCircle, yCircle, circleSize); // Draw the circle
       }
@@ -1230,23 +1231,26 @@ function drawConcentricArcs(x,y,max) {
   const maxRadius = min(width, height) * max; // Maximum radius for the outermost arc
   const arcSpacing = 20; // Spacing between arcs
 
-  //get current palette
-  //const selectedColor = getColorValues(i);
+  
 
   for (let i = 0; i < capturedData.length; i++) {
       for (let j = 0; j < capturedData[i].length; j++) {
+        //get current palette
+        const selectedColor = getColorValues(j);
+
           const sensorValue = capturedData[i][j]; // Get the data value for the current sensor
           const hueValue = sensorValue;
           const radius = maxRadius - (j * arcSpacing); // Calculate radius for the arc
           const arcLength = map(sensorValue, 0, 360, 0, TWO_PI); // Map sensor value to arc length
           const arcSize = radians(map(sensorValue,0,360,0,30));
+          const ringAlpha =20;
 
           noFill(); // No fill for arcs
           //stroke(hueValue, 100, 100, 50); // Set stroke color based on mapped hue
           if(useSensorHue){
-            stroke(averages[i], 100, 100, 50)
+            stroke(averages[j], 100, 100, ringAlpha)
           }else { 
-          //stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5)
+          stroke(selectedColor.h,selectedColor.s,selectedColor.l*1.5,ringAlpha)
           }
           strokeWeight(2); // Set stroke weight
 
@@ -1256,8 +1260,6 @@ function drawConcentricArcs(x,y,max) {
   }
 }
 
-//ORIGINAL Boxes and bars
-/*
 function drawSensorBoxesAndBars() {
   const padding = width * 0.03;
   const boxWidth = (width - (totalInputs + 1) * padding) / totalInputs; // Calculate box width based on padding and total inputs
@@ -1449,8 +1451,9 @@ function drawSensorBoxesAndBars() {
 
     //
 
-    if (i == highestSensorIndex) { stroke(0, 0, 100); strokeWeight(4); } // Draw outline around highest sensor.
-    else { noStroke(); strokeWeight(1); }
+    //if (i == highestSensorIndex) { stroke(0, 0, 100); strokeWeight(4); } // Draw outline around highest sensor.
+    //else { noStroke(); strokeWeight(1); }
+    noStroke();
 
     rect(x, y - (offset), boxWidth, boxHeight); // Draw the box
 
@@ -1460,15 +1463,15 @@ function drawSensorBoxesAndBars() {
     //text(round(averages[i]), x + (boxWidth * 0.03), y - (offset) + boxHeight / 2); // Display the average value in the center of the box
 
     // LINE GRAPH
-    const graphWidth = boxWidth - (padding * 0.2); // Set the width for the small line graph
+    const graphWidth = boxWidth - (padding * 0.02); // Set the width for the small line graph
     const graphHeight = boxHeight - (boxHeight * 0.01); // Set the height for the small line graph
-    const graphX = x + (padding * 0.1); // Center the graph horizontally within the box
+    const graphX = x + (padding * 0.02); // Center the graph horizontally within the box
     const graphY = y - (offset); // Position the graph above the box with padding
 
     // Draw the line graph
     noFill();
     stroke(0,0,80);//off-white
-    strokeWeight(2); // Set stroke weight
+    strokeWeight(1); // Set stroke weight
     beginShape();
     for (let j = 0; j < capturedData.length; j++) {
       const sensorValue = capturedData[j][i]; // Get the data value for the current sensor
@@ -1499,7 +1502,10 @@ function drawSensorBoxesAndBars() {
 
     // Draw the circle outline on the pie chart
     noFill();
-    stroke(0, 0, 50); // Set stroke color to white
+
+    if (i == highestSensorIndex) { stroke(0, 0, 70); strokeWeight(4); } // Draw outline around highest sensor.
+      else { stroke(0, 0, 50); strokeWeight(1); }   
+    //stroke(0, 0, 50); // Set stroke color to white
     
     ellipse(pieX, pieY, pieChartRadius, pieChartRadius); // Draw the circle outline
 
@@ -1511,9 +1517,12 @@ function drawSensorBoxesAndBars() {
     let rectCornerRadius = 10;
     //rect(pieX, pieY, pieChartRadius*0.4, pieChartRadius*0.3,rectCornerRadius,); // Draw a small dark background box for the text
     ellipse(pieX, pieY, pieChartRadius*0.4, pieChartRadius*0.4);
-    fill(255); // Set text color to white
+    fill(0,0,100); // Set text color to white
     textAlign(CENTER, CENTER); // Center the text
-    text(round(averages[i]), pieX, pieY); // Display the average value in the center of the pie chart
+
+    if (i == highestSensorIndex) { textSize(width * 0.012);; text(round(averages[i]), pieX, pieY);} // Draw outline around highest sensor.
+    else { textSize(width * 0.009);;text(round(averages[i]), pieX, pieY); }  
+     // Display the average value in the center of the pie chart
     rectMode(CORNER); // Return to default rect mode
 
 
@@ -1534,7 +1543,7 @@ function drawSensorBoxesAndBars() {
         //fill(sensorValue, map(sensorValue, 0, 360, 20, 80), map(sensorValue, 0, 360, 20, 80), 70); // Set fill color based on sensor value
         fill(averages[i],map(sensorValue,0,360,20,80),map(sensorValue,0,360,20,80)) //
     }else{
-        fill(h,s,l)
+        fill(h,map(sensorValue,0,360,20,80),map(sensorValue,0,360,20,70))
     }
       noStroke();
       rect(barX + j * barWidth, barY + barGraphHeight - barHeight, barWidth, barHeight); // Draw each bar
