@@ -37,7 +37,7 @@ let displayInfo = false;
 
 let backgroundColor =[0,0,10] //0,0,32 = grey / 10 dark grey
 
-let brushMode = true ; // enable p5 Brush mode - stops loop - needs fixing
+let brushMode = false ; // enable p5 Brush mode - stops loop - needs fixing
 
 let graphData = []; // Array to store historical data for each sensor
 //const maxDataPoints = 360; // Maximum number of data points to store for each sensor
@@ -572,7 +572,7 @@ if(button2State === 1){ //if btn2 is pressed shuffle the palettes
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
   textSize(paletteHeight / 3); // Set text size proportionally to paletteHeight
-  text("refresh colours", startX + margin*1.5, startY - paletteHeight * 3.5); // Label first circle above the circle
+  text("refresh colours", startX + margin*2, startY - paletteHeight * 3.5); // Label first circle above the circle
   text("go", width - startX - margin*1.7, startY - paletteHeight * 3.5); // Label second circle above the circle
 
 
@@ -895,7 +895,7 @@ function drawResultsScreen() {
     const offsetX = averages[i] * sin(TWO_PI * i / totalSensors);
     const offsetY = averages[i] * cos(TWO_PI * i / totalSensors);
         //draw becky blobs randomnly onscreen 
-        drawBeckyMode(i, width / 2 + offsetX, height / 2 + offsetY, averages[i], averages[i], averages[i], highestSensorIndex,averages[i],brushMode);
+        drawBeckyMode(i, width * 0.5 + offsetX, height *0.5 + offsetY, averages[i]*2, averages[i]*2, averages[i], highestSensorIndex,averages[i],brushMode);
       }
 
      
@@ -1260,7 +1260,7 @@ function drawConcentricArcs(x,y,max) {
   }
 }
 
-function drawSensorBoxesAndBars() {
+/*function drawSensorBoxesAndBars() {
   const padding = width * 0.03;
   const boxWidth = (width - (totalInputs + 1) * padding) / totalInputs; // Calculate box width based on padding and total inputs
   const boxHeight = height * 0.03; // Set a fixed height for the boxes
@@ -1329,8 +1329,11 @@ function drawSensorBoxesAndBars() {
     //PIE CHART
     // Draw a pie chart for each sensor average next to the boxes
     const pieChartRadius = boxWidth * 0.25; // Set the radius for the pie chart
-    const pieX = x + boxWidth*0.5; // Position the pie chart to the right of the box
-    const pieY = y - (offset) + boxHeight * 2; // Center the pie chart vertically with the box
+    //const pieX = x + boxWidth*0.5; // Position the pie chart to the right of the box
+    //const pieY = y - (offset) + boxHeight * 2; // Center the pie chart vertically with the box
+
+    const pieX = x + boxWidth*1.5; // Position the pie chart to the right of the box
+    const pieY = y - (offset) + boxHeight; // Center the pie chart vertically with the box
 
     // Draw the pie chart
     noStroke();
@@ -1484,7 +1487,7 @@ function drawSensorBoxesAndBars() {
     // PIE CHART
     const pieChartRadius = boxWidth * 0.25; // Set the radius for the pie chart
     let pieX, pieY; // Declare variables for pie chart position
-    if (col === 0) { // If in column 1
+    if (col === 1) { // If in column 1
       pieX = x - pieChartRadius; // Position the pie chart to the left of the box
     } else { // If in column 2
       pieX = x + boxWidth + pieChartRadius; // Position the pie chart to the right of the box
