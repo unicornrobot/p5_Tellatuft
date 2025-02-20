@@ -33,7 +33,7 @@ int button2State = 0;
 BluetoothSerial SerialBT;
 
 
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
 //#include <WiFi.h>
 //#include <esp_wifi.h>
 
@@ -361,8 +361,6 @@ SerialBT.println(tlSensors.getRaw(7));
                  + "," + String(button1.state())
                  + "," + String(button2.state())
                  ;
-
-
 
 //////////ONLY OUTPUT THIS BELOW FOR TELLATUFT USB CONNECTION/////////////
 

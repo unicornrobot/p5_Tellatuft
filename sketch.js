@@ -13,11 +13,20 @@ let portButton;
 let inputs = []; // all your inputs in an array
 let totalInputs = 8; //how many incoming inputs?
 
-let button1State,button2State = 0;
+//BUTTONS
+let button1State = 0;
+let button2State = 0;
+
+let lastButton1State = 0;
+let lastButton2State = 0;
+
+let debounceDelay = 50; // Adjust the debounce delay as needed
+let lastDebounceTime1 = 0;
+let lastDebounceTime2 = 0;
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
-let mappedControllerValues = [0,150,50,21,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
+let mappedControllerValues = [0,150,100,100,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
 let midiKnobValues = []; // Array to store MIDI knob values
@@ -99,6 +108,7 @@ function preload() {
     
 }
 
+//let bgColor = (0,0,32);//grey
 
 //PALETTES
 let palettes = [];
@@ -257,6 +267,11 @@ button2State = splitVal[8];
 
 //if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
 
+  // Update button states
+  updateButtonStates(splitVal);
+
+  // Process sensor values as needed
+  // ...
 }
 
 ///FULLSCREEN CODE
@@ -375,7 +390,7 @@ function keyPressed() {
 // PALETTES ///
 /////////////
 
-function getColorFromPalette(index) {
+function getColorFromPalette(index) { //UNUSED??
   const selectedColor = currentPalette[index];
   return {
       h: hue(selectedColor),
@@ -396,9 +411,9 @@ function generateRandomColorRamps() {
         total: 8,
         hCenter: Math.random() * 360, 
         hCycles: Math.random() * 0.5, //1.5
-        sRange: [70, 80],  // SATURATION RANGE - try 30, 70 
+        sRange: [random(50,80), random(30,80)],  // SATURATION RANGE - try 30, 70 
         sEasing: x => Math.pow(x, 2),
-        lRange: [Math.random() * 60, 75 + Math.random() * 10],
+        lRange: [Math.random() * 100, 175 + Math.random() * 10],
         lEasing: easings.easeInQuad,//x => Math.pow(x, 15),
       });
       palettes.push(palette);
@@ -469,113 +484,103 @@ function generateRandomPalettes() {
 let useSensorHue = true; // Enabled by default
 
 function displayPalettes() {
+  if (debugMode) { console.log(sensors.toString()); }
 
-  if (debugMode){console.log(sensors.toString())};
-
-  //check for button presses
-if(button1State === 1){ //if btn1 is pressed go to the capture screen
-  setGlobalPalette();
-  capturedData = []; //clear out the dataset for next time.
-  imageSaved = false;
-  viewMode = captureScreen; 
-};
-if(button2State === 1){ //if btn2 is pressed shuffle the palettes
-  generateRandomColorRamps(); /// TO DO - CYCLE ONLY ONCE.
-};
-
+  // Check for button presses
+  if (button1State === 1) { // If btn1 is pressed go to the capture screen
+    setGlobalPalette();
+    capturedData = []; // Clear out the dataset for next time.
+    imageSaved = false;
+    viewMode = captureScreen; 
+  }
+  if (button2State === 1) { // If btn2 is pressed shuffle the palettes
+    generateRandomColorRamps(); // TO DO - CYCLE ONLY ONCE.
+  }
 
   background(backgroundColor);
   noStroke();
-  const paletteWidth = width * 0.3 / colorsPerPalette; // Adjusted width for each color in a palette
-  const paletteHeight = height *0.07; // Adjusted height for each palette block
+  const paletteWidth = width * 0.1 / colorsPerPalette; // Adjusted width for each color in a palette
+  const paletteHeight = height * 0.07; // Adjusted height for each palette block
   const margin = width * 0.06; // Adjusted margin between palettes
-  const startX = margin; // Starting X position
   const startY = height - (paletteHeight + margin) * 3.7; // Starting Y position for 4 rows
 
-  // Draw the full hue range color bar
-  const hueBarWidth = (width) - 2 * margin - width*0.03; // Width of the hue bar
-  const hueBarHeight = paletteHeight*0.7; // Height of the hue bar
-  const hueBarY = startY - hueBarHeight - margin; // Y position for the hue bar
+  // Calculate the total width for the palette area
+  const totalPaletteWidth = 2 * (paletteWidth * colorsPerPalette) + margin; // Total width of both columns plus margin
+  const startX = (width - totalPaletteWidth) / 2; // Center the palettes horizontally
 
-  // Draw the hue bar
+  // Draw the full hue range color bar
+  const hueBarWidth = (width) - 2 * margin - width * 0.7; // Width of the hue bar
+  const hueBarHeight = paletteHeight * 0.7; // Height of the hue bar
+  const hueBarY = startY - hueBarHeight - margin; // Y position for the hue bar, just above the palette bars
+
+  // Draw the hue bar centered on the x-axis
   for (let h = 0; h < 360; h++) {
-      fill(h, 100, 100); // Set fill color based on hue
-      rect(startX + h * (hueBarWidth / 360), hueBarY, hueBarWidth / 360, hueBarHeight); // Draw a rectangle for the hue
+    fill(h, 100, 100); // Set fill color based on hue
+    rect(width / 2 + h * (hueBarWidth / 360) - hueBarWidth / 2, hueBarY, hueBarWidth / 360, hueBarHeight); // Draw a rectangle for the hue centered on the x-axis
   }
 
-   // Draw a white box around the hue bar to indicate it's the default option
-   if (sensors.every(sensor => sensor <= 40)) { // Check if no sensors are being touched (with a threshold allowance)
-     stroke(0,0,70); // White color for the box
-     strokeWeight(5);
-     noFill();
-     rect(startX - 2, hueBarY - 2, hueBarWidth + 4, hueBarHeight + 4); // Draw the box
-     useSensorHue = true;
-   } else {useSensorHue = false};
-    if(debugMode){console.log("sensor hue mode: " + useSensorHue)};
+  // Draw a white box around the hue bar to indicate it's the default option
+  if (sensors.every(sensor => sensor <= 40)) { // Check if no sensors are being touched (with a threshold allowance)
+    stroke(0, 0, 70); // White color for the box
+    strokeWeight(5);
+    noFill();
+    rect(width / 2 - hueBarWidth / 2, hueBarY - 2, hueBarWidth, hueBarHeight + 4); // Draw the box in the center of the x-axis
+    useSensorHue = true;
+  } else {
+    useSensorHue = false;
+  }
 
-
-
+  // DRAW PALETTE BARS
   for (let i = 0; i < 8; i++) { // Limit to display 4 rows of 2 palettes
     noStroke();
     const col = i % 2; // Column index (0 or 1)
     const row = floor(i / 2); // Row index (0 to 3)
 
     // Calculate position for each palette block
-    const x = startX + col * (width *0.55); // *0.55 is an alignment hack
-    const y = startY + (paletteHeight + margin) * row;
+    const x = startX + col * (paletteWidth * colorsPerPalette + margin); // Adjusted for center alignment with equal distance and margins on the x-axis
+    const y = startY + (paletteHeight + margin *0.5) * row;
 
     // Draw each color in the palette
     for (let j = 0; j < colorsPerPalette; j++) {
       fill(palettes[i][j]);
-      rect(x + j * paletteWidth, y, paletteWidth, paletteHeight); // Draw color block
+      rect(x + j * paletteWidth, y, paletteWidth, paletteHeight); // Draw color block aligned with the palette boxes
     }
-
 
     // Find the sensor with the highest reading and set selectedPaletteIndex accordingly
-  //THIS IS FOR USING THE SENSORS AS INPUTS 1-8
-  
-  let highestReading = 0;
-  let highestReadingIndex = 0;
-  for (let i = 0; i < sensors.length; i++) {
-    if (sensors[i] > highestReading) {
-      highestReading = sensors[i];
-      highestReadingIndex = i;
+    let highestReading = 0;
+    let highestReadingIndex = 0;
+    for (let k = 0; k < sensors.length; k++) {
+      if (sensors[k] > highestReading) {
+        highestReading = sensors[k];
+        highestReadingIndex = k;
+      }
+    }
+    selectedPaletteIndex = highestReadingIndex + 1; // Adjust index to match palette numbering
+
+    // Draw a white border around the selected palette if a sensor is detected
+    if (selectedPaletteIndex === i + 1 && highestReading > 40) { // Check if this palette is selected and a sensor is detected
+      strokeWeight(5); // Set stroke weight for the border
+      stroke(0, 0, 70); // Set stroke color to white
+      noFill(); // Ensure no fill for the border
+      rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette aligned with the palette boxes
+    } else {
+      noStroke(); // Ensure no stroke for non-selected palettes or if no sensor is detected
     }
   }
-  selectedPaletteIndex = highestReadingIndex + 1; // Adjust index to match palette numbering
 
-
-      // Draw a white border around the selected palette if a sensor is detected
-      if (selectedPaletteIndex === i+1 && highestReading > 40) { // Check if this palette is selected and a sensor is detected
-      //if (selectedPaletteIndex === i+1) { // Check if this palette is selected and a sensor is detected
-        
-      strokeWeight(5); // Set stroke weight for the border
-        stroke(0,0,70); // Set stroke color to white
-        noFill(); // Ensure no fill for the border
-        rect(x, y, paletteWidth * colorsPerPalette, paletteHeight); // Draw border around the selected palette
-      } else { 
-        noStroke(); // Ensure no stroke for non-selected palettes or if no sensor is detected
-      }
-
-  
-    
-  }
   // Draw 2 grey circles above the palettes at the top of the screen
-
-  if(button2State === 1){fill(0, 0, 60)}else{noFill()};
+  if (button2State === 1) { fill(0, 0, 60); } else { noFill(); }
   stroke(0, 0, 60); // Set fill color to grey in HSB
-  
-  ellipse(startX + margin*0.5, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw first circle aligned with the left edge of the palettes
-  ellipse(width - startX - margin*0.8, startY - paletteHeight * 3.5, paletteHeight, paletteHeight); // Draw second circle aligned with the right edge of the palettes
- 
+
+  ellipse(margin * 0.5, margin * 0.5, paletteHeight*0.5, paletteHeight*0.5); // Draw first circle at the top left
+  ellipse(width - margin * 0.8, margin * 0.5, paletteHeight*0.5, paletteHeight*0.5); // Draw second circle at the top right
+
   // Label the circles
   fill(0, 0, 100); // Set fill color to white in HSB
   textAlign(CENTER, CENTER); // Set text alignment to center
-  textSize(paletteHeight / 3); // Set text size proportionally to paletteHeight
-  text("refresh colours", startX + margin*2, startY - paletteHeight * 3.5); // Label first circle above the circle
-  text("go", width - startX - margin*1.7, startY - paletteHeight * 3.5); // Label second circle above the circle
-
-
+  textSize(paletteHeight / 4); // Set text size proportionally to paletteHeight
+  text("new colours", margin * 1.2, margin * 0.2 + paletteHeight / 2); // Label first circle at the top left
+  text("go", width - margin * 1.2, margin * 0.2 + paletteHeight / 2); // Label second circle at the top right
 }
 
 function accessHSLValues() {
@@ -612,13 +617,27 @@ let resetToBottom = true; // Setting to enable drawing to start at the bottom wh
 let imageSaved = false;
 
 function drawWeave() {
+  //draw background
+  //background(backgroundColor)
+  noStroke();
+  fill(0,0,30)
+  rect(0,0,width,height*0.1)
 
-///UI
-  
 
+  //draw buttons on screen
+  const buttonSize = height * 0.07; // Adjusted height for each palette block
+  const buttonLoc = width * 0.06; // Adjusted margin between palettes
+  stroke(0,0,100)
+  ellipse(buttonLoc * 0.5, buttonLoc * 0.5, buttonSize*0.5, buttonSize*0.5); // Draw first circle at the top left
+  ellipse(width - buttonLoc * 0.8, buttonLoc * 0.5, buttonSize*0.5, buttonSize*0.5); // Draw second circle at the top right
+  fill(0,0,100)
+  text("data" ,width*0.07, buttonLoc * 0.4)
+
+///Button logic
+  if(button1State === 3){console.log("btn1")};
   if(button1State === 6 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
   //if(button1State === 3 ){verticalOffset = 0;viewMode = resultsScreen}//data screen
-  if(button2State === 1){verticalOffset = 0;viewMode = resultsScreen}//back button
+  if(button2State === 1){verticalOffset = 0;text("processing",width*0.5,height*0.5,);viewMode = resultsScreen;}//back button
 
   const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
   const centerX = width / 2; // Center of the screen
@@ -626,15 +645,10 @@ function drawWeave() {
 
   let currentX = 0; // Initialize the starting x position
 
-  let colors =[]
-  colors[0] = [190.43,94.52,14.31]
-  colors[1] = [166.42,39.26,26.47]
-  colors[2] = [50.09,80.74,73.53]
-  colors[3] = [30.9,96.53,66.08]
-  colors[4] = [23.41,84.26,57.65]
-  colors[5] = [248.32,45.7,43.33]
-  colors[6] = [272.43,25.17,28.82]
-  colors[7] = [325.45,42.86,54.71]
+
+  let h = 0;
+  let s = 0;
+  let l = 0;
 
 
   for (let i = 0; i < sensors.length; i++) {
@@ -644,10 +658,20 @@ function drawWeave() {
     // Draw the box
     noStroke();
 
+
+
     //HSB RAINBOW -- HUE MAPPED FROM SENSOR VALUE TO HSB WHEEL
     if(useSensorHue) {
-      fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
-    } else{
+
+      //make the palette boxes disappear when not pressed for each individual sensor
+      if (sensorValue > 10) {
+        fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+      } else {
+        fill(backgroundColor);
+      }
+
+   } else { //then use selected palette
+     
     //HUE MAPPED TO KNOB 4 + SENSOR VALUES SET SAT AND BRI 
     //fill(mappedControllerValues[4], map(sensorValue, 0, 360, 50, 100), map(sensorValue, 0, 360, 50, 100), map(mappedControllerValues[3], 0, 360, 5, 100)); // Fixed hue, sensor values change saturation and brightness, alpha knob 3
     
@@ -656,13 +680,12 @@ function drawWeave() {
    
     //HUE PICKED BY CHOSEN GLOBAL PALETTE
     //const selectedColor = palettes[selectedPaletteIndex-1][i]; // Get the color object // (map the index to the palette number)
-    
     const selectedColor = currentPalette[i]; // Get the color object // (map the index to the palette number)
-
-    const h = hue(selectedColor); // Get the hue
-    const s = saturation(selectedColor); // Get the saturation
-    const l = lightness(selectedColor); // Get the lightness
-
+    
+    h = hue(selectedColor); // Get the hue
+    s = saturation(selectedColor); // Get the saturation
+    l = lightness(selectedColor); // Get the lightness
+   
     fill(h,s,l*1.5);  //hack to match lightness value
     }
     //draw the boxes
@@ -670,17 +693,41 @@ function drawWeave() {
     
     // Draw the mirrored box on the x-axis
     rect(width - currentX - boxWidth, startY - verticalOffset, boxWidth, boxHeight);
-
-         //palette boxes
-         let paletteBoxWidth = width/sensors.length
-         let palleteBoxHeight = height*0.02
-         rect(i * paletteBoxWidth, height-palleteBoxHeight, paletteBoxWidth, palleteBoxHeight);
-
-
+ 
     // Increment the x position for the next box
     currentX += boxWidth;
+
+    //palette boxes
+    
+   //  
+    let paletteBoxWidth = width/sensors.length *0.20;
+    let palleteBoxHeight = height*0.01;
+    let offset = 1.4;
+    const column = i % 2;
+    const row = floor(i / 2);
+    rect(width / 2 - paletteBoxWidth / 2 - (paletteBoxWidth * offset) / 2 + column * (paletteBoxWidth * offset), row * (palleteBoxHeight * offset) + height*0.02, paletteBoxWidth, palleteBoxHeight);
 //console.log(verticalOffset)
   }
+
+   // Draw a circle the size of the paletteboxheight
+   let paletteBoxWidth = width/sensors.length;
+   let palleteBoxHeight = height*0.02;
+   let offset = 1.4;
+   noFill();
+   stroke(0, 0, 100);
+   strokeWeight(2);
+   let xStart = width * 0.040;
+   let yStart = height * 0.040;
+   //ellipse(xStart, yStart, palleteBoxHeight*1.5, palleteBoxHeight*1.5);
+   // Add text underneath that says "data"
+   noStroke();
+   //fill(255);
+   textAlign(CENTER, TOP);
+   textSize(width*0.009)
+   //text("press=", xStart, yStart*0.2);
+   text("data", xStart+palleteBoxHeight*2.5, palleteBoxHeight*1.5);
+
+
 
 
     if (debugMode) {
@@ -717,8 +764,8 @@ function drawWeave() {
   }
 
     // If verticalOffset exceeds the screen height, reset it based on the setting
-    if (verticalOffset > height) {
-      if(!resetToBottom){verticalOffset=0;viewMode = resultsScreen};
+    if (verticalOffset > height*0.9) { //distance to loop from the top of the screen
+        if(!resetToBottom){verticalOffset=0;viewMode = resultsScreen};
       verticalOffset = resetToBottom ? 0 : height - boxHeight; //resettoBottom is either true or false
     }
   }
@@ -1981,4 +2028,26 @@ function saveDataToLocalStorage() {
   localStorage.setItem('capturedData', JSON.stringify(capturedData));
   localStorage.setItem('mappedControllerValues', JSON.stringify(mappedControllerValues));
   console.log("Data saved to local storage.");
+}
+
+function updateButtonStates(splitVal) {
+  // Get the current button states from the split values
+  const currentButton1State = Number(splitVal[9]);
+  const currentButton2State = Number(splitVal[8]);
+  //if(debugMode){console.log(currentButton1State);console.log(currentButton2State)};
+
+  
+      button1State = currentButton1State; // Update the button state
+      if (button1State === 3) { //3 only gets sent once in the serial string (whereas 1 gets sent multiple times)
+        if(debugMode){console.log("Button 1 pressed")}; // Action for button 1 pressed
+      }
+
+
+      button2State = currentButton2State; // Update the button state
+      // Perform action based on button 2 state
+      if (button2State === 3) {
+        // Action for button 2 pressed
+        if(debugMode){console.log("Button 2 pressed")};
+      }
+
 }
