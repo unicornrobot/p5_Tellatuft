@@ -26,7 +26,7 @@ let lastDebounceTime2 = 0;
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
-let mappedControllerValues = [0,150,100,100,36,0,0,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
+let mappedControllerValues = [0,150,100,100,100,360,100,0,0,300,0,0,0,0,0,0,0,0]; //first item (0) not used
 let savedControllerValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
 
 let midiKnobValues = []; // Array to store MIDI knob values
@@ -407,16 +407,42 @@ function generateRandomColorRamps() {
   palettes = []; // Clear existing palettes
 
   for (let i = 0; i < 8; i++) {
+    
+      const hCenter = mappedControllerValues[1]; // Map hue center to MIDI knob 1 (0-360)
+      const hCycles = map(mappedControllerValues[2], 0, 360, 0.1, 0.9); // Map hue cycles to MIDI knob 2
+      //const sRange = [map(mappedControllerValues[3], 0, 360, 20, 80), map(mappedControllerValues[4], 0, 360, 30, 80)]; // Map saturation range to MIDI knobs 3 and 4
+      const sRange = [mappedControllerValues[3], mappedControllerValues[4]]; // Map saturation range to MIDI knobs 3 and 4
+
+      const lRange = [map(mappedControllerValues[5], 0, 360, 10, 100), map(mappedControllerValues[6], 0, 360, 17, 10)]; // Map lightness range to MIDI knobs 5 nd 6
+      //const lRange = [mappedControllerValues[5], mappedControllerValues[6]]; // Map lightness range to MIDI knobs 5 nd 6
+
+      //const hCenter = Math.random() * 360
+      //const hCycles = Math.random() * 0.5
+      //const sRange = [round(random(50,80),1), round(random(30,80),1) ]; // 
+      //const lRange = [round(random(50,80),1), round(random(30,80),1)]; // 
+
+
       const palette = generateColorRamp({
         total: 8,
-        hCenter: Math.random() * 360, 
-        hCycles: Math.random() * 0.5, //1.5
-        sRange: [random(50,80), random(30,80)],  // SATURATION RANGE - try 30, 70 
+        //*
+        hCenter: hCenter, 
+        hCycles: hCycles,
+        sRange: sRange,  // SATURATION RANGE - try 30, 70 
+        //*/
+        /*
+        hCenter: hCenter, 
+        hCycles: hCycles, //1.5
+        sRange: [sRange,sRange],  // SATURATION RANGE - try 30, 70 
+        /*/
         sEasing: x => Math.pow(x, 2),
-        lRange: [Math.random() * 100, 175 + Math.random() * 10],
+        lRange: lRange,
+        //lRange: [lRange, lRange],
         lEasing: easings.easeInQuad,//x => Math.pow(x, 15),
       });
       palettes.push(palette);
+      console.log(`Palette ${i+1}: hCenter=${round(hCenter,1)}, hCycles=${round(hCycles,1)}, sRange=${sRange}, lRange=${lRange}`); // Output values to console for debugging
+      console.log(`knob ${i+1}: ${round(mappedControllerValues[i+1],1)}`)
+
   }
 }
 
