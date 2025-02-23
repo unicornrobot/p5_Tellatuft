@@ -3,6 +3,16 @@
 //visualizations based on the reading
 //different modes
 
+//KEY PRESSES///
+//  s = startscreen
+//  c = capture
+//  r = results
+//-------------
+//  d = debug
+//  v = cycle through modes
+//  a = save screenshot
+//  b = reset weave
+
 // 
 
 
@@ -11,7 +21,7 @@ let latestData = "waiting for data"; // variable to hold the data
 let portButton;
 
 let inputs = []; // all your inputs in an array
-let totalInputs = 8; //how many incoming inputs?
+let totalInputs = 8; //how many incoming touch inputs?
 
 //BUTTONS
 let button1State = 0;
@@ -23,6 +33,14 @@ let lastButton2State = 0;
 let debounceDelay = 50; // Adjust the debounce delay as needed
 let lastDebounceTime1 = 0;
 let lastDebounceTime2 = 0;
+
+//rotary encoders
+let rotary1, rotary2, rotary3 = 100; //defaults
+
+//weave controls
+let initialBoxHeight = 0; // Set the initial value for boxHeight
+let initialWeaveOffset = 0; // Set the initial value for weaveOffset
+
 
 //webmidi//defaults.
 //GLOBAL VALUES TO SAVE CONSTOLLER VALUES
@@ -251,7 +269,7 @@ function gotData() {
   let splitVal = splitTokens(currentString, ',');
 
   //parse strings into ints. 
-  splitVal = int(splitVal);
+  splitVal = splitVal.map(value => isNaN(value) ? 0 : int(value)); // Convert to int and replace NaN with 0
 
   //only push  totalInputs at one a time. 
   sensors = [];
@@ -261,9 +279,14 @@ function gotData() {
   }
 //button 1 = index 8
 //button 2 = index 9
-
 button1State = splitVal[9];
 button2State = splitVal[8];
+
+//rotarys
+rotary1 = splitVal[10];
+rotary2 = splitVal[11];
+rotary3 = splitVal[12];
+console.log(rotary1 + "-" + rotary2 + "-" + rotary3)
 
 //if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
 
@@ -301,6 +324,8 @@ function windowResized() {
 //  v = cycle through modes
 //  a = save screenshot
 //  b = reset weave
+
+
 function keyPressed() {
 
    if (key === 'f' || key === 'F') { // Press 'f' for full screen
@@ -663,9 +688,17 @@ function drawWeave() {
   if(button1State === 3){console.log("btn1")};
   if(button1State === 6 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
   //if(button1State === 3 ){verticalOffset = 0;viewMode = resultsScreen}//data screen
-  if(button2State === 1){verticalOffset = 0;text("processing",width*0.5,height*0.5,);viewMode = resultsScreen;}//back button
+  if(button2State === 1 || keyPressed === 'r'){verticalOffset = 0;text("processing",width*0.5,height*0.5,);viewMode = resultsScreen;}//back button
 
-  const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
+//BOX HEIGHT
+  //const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = initialBoxHeight + map(int(rotary1), 0, 360, 10, 1); // Fixed height for each box - defines the thread size (1=small)
+
+//DRAWING SPEED
+  // Increment the offset for the next set of sensor data
+  //weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 0); // speed of drawing - 0=fast  10=good
+  weaveOffset += height / map(rotary2, 0, 360, 0, 10); // speed of drawing - 0=fast  10=good, true for default value
+
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
 
@@ -691,7 +724,9 @@ function drawWeave() {
 
       //make the palette boxes disappear when not pressed for each individual sensor
       if (sensorValue > 10) {
-        fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+        //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+
+        fill(sensorValue, 90, 80, map(rotary3, 0, 360, 30, 100)); // Color based on sensor value / alpha knob 3
       } else {
         fill(backgroundColor);
       }
@@ -777,8 +812,6 @@ function drawWeave() {
     }
 
 
-  // Increment the offset for the next set of sensor data
-  weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 0); // speed of drawing - 0=fast  10=good
 
   // If the weaveOffset exceeds the height, reset it and move up vertically
   if (weaveOffset > height) {
