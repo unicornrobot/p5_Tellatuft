@@ -35,7 +35,7 @@ let lastDebounceTime1 = 0;
 let lastDebounceTime2 = 0;
 
 //rotary encoders
-let rotary1, rotary2, rotary3 = 100; //defaults
+let rotary1, rotary2, rotary3 = 0; //defaults
 
 //weave controls
 let initialBoxHeight = 0; // Set the initial value for boxHeight
@@ -283,10 +283,10 @@ button1State = splitVal[9];
 button2State = splitVal[8];
 
 //rotarys
-rotary1 = splitVal[10];
+rotary1 = splitVal[12];
 rotary2 = splitVal[11];
-rotary3 = splitVal[12];
-console.log(rotary1 + "-" + rotary2 + "-" + rotary3)
+rotary3 = splitVal[10];
+if(debugMode){console.log(rotary1 + "-" + rotary2 + "-" + rotary3)};
 
 //if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
 
@@ -433,16 +433,22 @@ function generateRandomColorRamps() {
 
   for (let i = 0; i < 8; i++) {
     
-      const hCenter = mappedControllerValues[1]; // Map hue center to MIDI knob 1 (0-360)
-      const hCycles = map(mappedControllerValues[2], 0, 360, 0.1, 0.9); // Map hue cycles to MIDI knob 2
-      //const sRange = [map(mappedControllerValues[3], 0, 360, 20, 80), map(mappedControllerValues[4], 0, 360, 30, 80)]; // Map saturation range to MIDI knobs 3 and 4
+    //KNOBS
+    
+      //const hCenter = mappedControllerValues[1]; // Map hue center to MIDI knob 1 (0-360)
+      //const hCenter = rotary1; // Map hue center to esp knobs
+      //const hCycles = map(mappedControllerValues[2], 0, 360, 0.1, 0.9); // Map hue cycles to MIDI knob 2
+      //const hCycles = rotary2; //esp knob
+     //const sRange = [map(mappedControllerValues[3], 0, 360, 20, 80), map(mappedControllerValues[4], 0, 360, 30, 80)]; // Map saturation range to MIDI knobs 3 and 4
       const sRange = [mappedControllerValues[3], mappedControllerValues[4]]; // Map saturation range to MIDI knobs 3 and 4
+      //const sRange = rotary3; //esp knob
+
 
       const lRange = [map(mappedControllerValues[5], 0, 360, 10, 100), map(mappedControllerValues[6], 0, 360, 17, 10)]; // Map lightness range to MIDI knobs 5 nd 6
       //const lRange = [mappedControllerValues[5], mappedControllerValues[6]]; // Map lightness range to MIDI knobs 5 nd 6
 
-      //const hCenter = Math.random() * 360
-      //const hCycles = Math.random() * 0.5
+      const hCenter = Math.random() * 360
+      const hCycles = Math.random() * 0.5
       //const sRange = [round(random(50,80),1), round(random(30,80),1) ]; // 
       //const lRange = [round(random(50,80),1), round(random(30,80),1)]; // 
 
@@ -465,8 +471,8 @@ function generateRandomColorRamps() {
         lEasing: easings.easeInQuad,//x => Math.pow(x, 15),
       });
       palettes.push(palette);
-      console.log(`Palette ${i+1}: hCenter=${round(hCenter,1)}, hCycles=${round(hCycles,1)}, sRange=${sRange}, lRange=${lRange}`); // Output values to console for debugging
-      console.log(`knob ${i+1}: ${round(mappedControllerValues[i+1],1)}`)
+      if(debugMode){console.log(`Palette ${i+1}: hCenter=${round(hCenter,1)}, hCycles=${round(hCycles,1)}, sRange=${sRange}, lRange=${lRange}`)}; // Output values to console for debugging
+      if(debugMode){console.log(`knob ${i+1}: ${round(mappedControllerValues[i+1],1)}`)};
 
   }
 }
@@ -684,6 +690,8 @@ function drawWeave() {
   fill(0,0,100)
   text("data" ,width*0.07, buttonLoc * 0.4)
 
+  
+
 ///Button logic
   if(button1State === 3){console.log("btn1")};
   if(button1State === 6 && imageSaved == false){saveCanvas('weave_' + Date.now(), 'png');imageSaved=true;} //long hold and release
@@ -691,13 +699,18 @@ function drawWeave() {
   if(button2State === 1 || keyPressed === 'r'){verticalOffset = 0;text("processing",width*0.5,height*0.5,);viewMode = resultsScreen;}//back button
 
 //BOX HEIGHT
-  //const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 10); // Fixed height for each box - defines the thread size (1=small)
-  const boxHeight = initialBoxHeight + map(int(rotary1), 0, 360, 10, 1); // Fixed height for each box - defines the thread size (1=small)
+  //MIDI MODE
+  const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
+  //ROTARY MODE
+  //const boxHeight = initialBoxHeight + map(int(rotary1), 360, 0, 10, 1); // Fixed height for each box - defines the thread size (1=small)
 
 //DRAWING SPEED
   // Increment the offset for the next set of sensor data
-  //weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 0); // speed of drawing - 0=fast  10=good
-  weaveOffset += height / map(rotary2, 0, 360, 0, 10); // speed of drawing - 0=fast  10=good, true for default value
+  //MIDI MODE
+  weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 1); // speed of drawing - 0=fast  10=good
+  
+  //Rotary MODE
+  //weaveOffset += height / map(rotary2, 0, 360, 0, 10); // speed of drawing - 0=fast  10=good, true for default value
 
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
@@ -724,9 +737,9 @@ function drawWeave() {
 
       //make the palette boxes disappear when not pressed for each individual sensor
       if (sensorValue > 10) {
-        //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+        fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
 
-        fill(sensorValue, 90, 80, map(rotary3, 0, 360, 30, 100)); // Color based on sensor value / alpha knob 3
+        //fill(sensorValue, 90, 80, map(rotary3, 360, 0, 100, 30)); // Color based on sensor value / alpha knob 3
       } else {
         fill(backgroundColor);
       }
@@ -759,8 +772,7 @@ function drawWeave() {
     currentX += boxWidth;
 
     //palette boxes
-    
-   //  
+
     let paletteBoxWidth = width/sensors.length *0.20;
     let palleteBoxHeight = height*0.01;
     let offset = 1.4;
@@ -789,6 +801,40 @@ function drawWeave() {
    text("data", xStart+palleteBoxHeight*2.5, palleteBoxHeight*1.5);
 
 
+   // Draw knobs at the top of the screen
+  const knobSize = 50; // Size of the knobs
+  const knobY = 30; // Y position for the knobs
+  const knobSpacing = 100; // Spacing between knobs
+  const knobXStart = width / 4 - knobSpacing; // Starting X position for the first knob
+  let knobs = [rotary1,rotary2,rotary3];
+
+  for (let i = 0; i < 3; i++) {
+    const knobX = knobXStart + i * knobSpacing; // Calculate X position for each knob
+    fill(200); // Set knob color
+    ellipse(knobX, knobY, knobSize, knobSize); // Draw the knob
+
+     // Display the mapped rotary value inside the knob
+     fill(0); // Set text color
+     textAlign(CENTER, CENTER);
+     let rotaryValue;
+     if (i === 0) {
+       rotaryValue = int(map(rotary1,0,360,0,10)); // Get value for the first knob
+     } else if (i === 1) {
+       rotaryValue = int(map(rotary2,0,360,0,10)); // Get value for the second knob
+     } else {
+       rotaryValue = int(rotary3); // Get value for the third knob
+     }
+     text(rotaryValue, knobX, knobY+10); // Display the mapped rotary value
+   
+
+    // Display the current rotary value
+    fill(0); // Set text color
+    textAlign(CENTER, CENTER);
+    text(`Rotary ${i + 1}: ${int(knobs[i])}`, knobX, knobY); // Display the rotary value
+  }
+
+
+
 
 
     if (debugMode) {
@@ -810,6 +856,8 @@ function drawWeave() {
       console.log(`brightness: ${round(mappedControllerValues[3])}`);
       */
     }
+    print("1:height: " + round(mappedControllerValues[1]) + " 2:offset: " + round(mappedControllerValues[2]) + " 3:alpha" + round(mappedControllerValues[3]));
+
 
 
 
