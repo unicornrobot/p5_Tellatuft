@@ -672,6 +672,7 @@ let weaveOffset = 0; // Initialize a variable to track the horizontal offset
 let verticalOffset = 0; // Initialize a variable to track the vertical offset
 let resetToBottom = true; // Setting to enable drawing to start at the bottom when it reaches the top
 let imageSaved = false;
+let knobMode = "rotary";
 
 function drawWeave() {
   //draw background
@@ -700,17 +701,17 @@ function drawWeave() {
 
 //BOX HEIGHT
   //MIDI MODE
-  const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
+  //const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
   //ROTARY MODE
-  //const boxHeight = initialBoxHeight + map(int(rotary1), 360, 0, 10, 1); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = map(int(rotary1), 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
 
 //DRAWING SPEED
   // Increment the offset for the next set of sensor data
   //MIDI MODE
-  weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 1); // speed of drawing - 0=fast  10=good
+  //weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 1); // speed of drawing - 0=fast  10=good
   
   //Rotary MODE
-  //weaveOffset += height / map(rotary2, 0, 360, 0, 10); // speed of drawing - 0=fast  10=good, true for default value
+  weaveOffset += height / map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
 
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
@@ -737,9 +738,10 @@ function drawWeave() {
 
       //make the palette boxes disappear when not pressed for each individual sensor
       if (sensorValue > 10) {
-        fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
-
-        //fill(sensorValue, 90, 80, map(rotary3, 360, 0, 100, 30)); // Color based on sensor value / alpha knob 3
+        //midi
+        //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
+        //rotary
+        fill(sensorValue, 90, 80, map(rotary3, 0, 360, 20, 100)); // Color based on sensor value / alpha knob 3
       } else {
         fill(backgroundColor);
       }
@@ -801,7 +803,7 @@ function drawWeave() {
    text("data", xStart+palleteBoxHeight*2.5, palleteBoxHeight*1.5);
 
 
-   // Draw knobs at the top of the screen
+   // Draw knobs at the top of the screen with dial indicators
   const knobSize = 50; // Size of the knobs
   const knobY = 30; // Y position for the knobs
   const knobSpacing = 100; // Spacing between knobs
@@ -813,24 +815,44 @@ function drawWeave() {
     fill(200); // Set knob color
     ellipse(knobX, knobY, knobSize, knobSize); // Draw the knob
 
-     // Display the mapped rotary value inside the knob
-     fill(0); // Set text color
-     textAlign(CENTER, CENTER);
-     let rotaryValue;
-     if (i === 0) {
-       rotaryValue = int(map(rotary1,0,360,0,10)); // Get value for the first knob
-     } else if (i === 1) {
-       rotaryValue = int(map(rotary2,0,360,0,10)); // Get value for the second knob
-     } else {
-       rotaryValue = int(rotary3); // Get value for the third knob
-     }
-     text(rotaryValue, knobX, knobY+10); // Display the mapped rotary value
-   
+    // Draw dial indicator for each knob
+    let rotaryValues = [rotary1, rotary2, rotary3];
+    let dialAngle = map(rotaryValues[i], 0, 360, radians(120), radians(400)); // Map rotary value to radians for dial angle
 
-    // Display the current rotary value
+    let dialX = knobX + cos(dialAngle) * knobSize / 2; // Calculate X position for the dial
+    let dialY = knobY + sin(dialAngle) * knobSize / 2; // Calculate Y position for the dial
+    stroke(0); // Set stroke color for the dial
+    strokeWeight(2); // Set stroke weight for the dial
+    let radius = dist(knobX, knobY, dialX, dialY);
+    let halfRadiusX = knobX + (dialX - knobX) * 0.5;
+    let halfRadiusY = knobY + (dialY - knobY) * 0.5;
+    let edgeX = knobX + cos(dialAngle) * radius;
+    let edgeY = knobY + sin(dialAngle) * radius;
+    line(halfRadiusX, halfRadiusY, edgeX, edgeY); // Draw a line from half the radius out to the edge
+
+    // Display the mapped rotary value inside the knob
     fill(0); // Set text color
     textAlign(CENTER, CENTER);
-    text(`Rotary ${i + 1}: ${int(knobs[i])}`, knobX, knobY); // Display the rotary value
+    let rotaryValue;
+    if (i === 0) {
+      rotaryValue = int(map(rotary1,0,360,1,10)); // Get value for the first knob
+    } else if (i === 1) {
+      rotaryValue = int(map(rotary2,0,360,1,10)); // Get value for the second knob
+    } else {
+      rotaryValue = int(map(rotary3,0,360,10,100)); // Get value for the third knob
+    }
+    text(rotaryValue, knobX, knobY); // Display the mapped rotary value
+    // Add the words "size", "speed" "see through" underneath each knob
+    fill(0); // Set text color
+    textAlign(CENTER, TOP);
+    textSize(width*0.009)
+    if (i === 0) {
+      text("size", knobX, knobY+knobSize-(knobSize*0.4)); // Display the word "size" underneath the first knob
+    } else if (i === 1) {
+      text("speed", knobX, knobY+knobSize-(knobSize*0.4)); // Display the word "speed" underneath the second knob
+    } else {
+      text("see through", knobX, knobY+knobSize-(knobSize*0.4)); // Display the word "see through" underneath the third knob
+    }
   }
 
 
@@ -839,6 +861,8 @@ function drawWeave() {
 
     if (debugMode) {
 
+      //MIDI KNOBS
+      //print("1:height: " + round(mappedControllerValues[1]) + " 2:offset: " + round(mappedControllerValues[2]) + " 3:alpha" + round(mappedControllerValues[3]));
 
       //console.log(currentPalette);
       //console.log(palettes[selectedPaletteIndex-1]);
@@ -856,16 +880,14 @@ function drawWeave() {
       console.log(`brightness: ${round(mappedControllerValues[3])}`);
       */
     }
-    print("1:height: " + round(mappedControllerValues[1]) + " 2:offset: " + round(mappedControllerValues[2]) + " 3:alpha" + round(mappedControllerValues[3]));
-
-
+    print(rotary1 + " " + rotary2 + " " + rotary3)
 
 
   // If the weaveOffset exceeds the height, reset it and move up vertically
   if (weaveOffset > height) {
     weaveOffset = 0;
 
-        // Only draw when at least one sensor value is more than zero
+        // Only draw when at least one sensor value is more than 50
   if (sensors.some(sensor => sensor > 50)) {
     verticalOffset += boxHeight; // Move up for the next iteration without gap
   }

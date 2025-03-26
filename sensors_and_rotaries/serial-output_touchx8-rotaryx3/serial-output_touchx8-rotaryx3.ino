@@ -22,16 +22,17 @@ VCC                    any microcontroler output pin - but set also ROTARY_ENCOD
 #define ROTARY_ENCODER_B_PIN D5
 #define ROTARY_ENCODER_BUTTON_PIN D7
 #else
-#define ROTARY_ENCODER1_A_PIN 22 //orange
-#define ROTARY_ENCODER1_B_PIN 23 //green
+//SWAPPED A AND B PINS DUE TO REVERSED PINS on my rotary encoder 
+#define ROTARY_ENCODER1_B_PIN 22 //orange
+#define ROTARY_ENCODER1_A_PIN 23 //green
 #define ROTARY_ENCODER1_BUTTON_PIN 21 //brown
 
-#define ROTARY_ENCODER2_A_PIN 19 //blue
-#define ROTARY_ENCODER2_B_PIN 18 //green
+#define ROTARY_ENCODER2_B_PIN 19 //blue
+#define ROTARY_ENCODER2_A_PIN 18 //green
 #define ROTARY_ENCODER2_BUTTON_PIN 17 //purple
 
-#define ROTARY_ENCODER3_A_PIN 39 //brown
-#define ROTARY_ENCODER3_B_PIN 34 //red
+#define ROTARY_ENCODER3_B_PIN 39 //brown
+#define ROTARY_ENCODER3_A_PIN 34 //red
 #define ROTARY_ENCODER3_BUTTON_PIN 35 //orange
 #endif
 #define ROTARY_ENCODER_VCC_PIN -1 /* 27 put -1 of Rotary encoder Vcc is connected directly to 3,3V; else you can use declared output pin for powering rotary encoder */
