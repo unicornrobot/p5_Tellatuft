@@ -244,6 +244,7 @@ function draw() {
       break;
     case 7:
       displayPalettes();
+      verticalOffset = 0;
       dashDrawOnce = false;
       break;
   }
@@ -707,7 +708,8 @@ function drawWeave() {
   //MIDI MODE
   //const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
   //ROTARY MODE
-  const boxHeight = 20;//map(int(rotary1), 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = 20;//fixed default
+  //const boxHeight = map(int(rotary1), 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
 
 //DRAWING SPEED
   // Increment the offset for the next set of sensor data
@@ -716,7 +718,9 @@ function drawWeave() {
   
   //Rotary MODE
   //weaveOffset += height / map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
+  //fixed default
   weaveOffset += height; /// map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
+  //weaveOffset += height / map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
 
 
   const centerX = width / 2; // Center of the screen
@@ -747,7 +751,10 @@ function drawWeave() {
         //midi
         //fill(sensorValue, 90, 80, map(mappedControllerValues[3], 0, 360, 10, 100)); // Color based on sensor value / alpha knob 3
         //rotary
-        fill(sensorValue, 90, 80, map(rotary3, 0, 360, 20, 100)); // Color based on sensor value / alpha knob 3
+        //fill(sensorValue, 90, 80, map(rotary3, 0, 360, 20, 100)); // Color based on sensor value / alpha knob 3
+        //fixed default
+        fill(sensorValue, 90, 80, 20); // fixed alpha
+
       } else {
         fill(backgroundColor);
       }
@@ -917,7 +924,7 @@ function drawWeave() {
     console.log(`brightness: ${round(mappedControllerValues[3])}`);
     */
   }
-  print(rotary1 + " " + rotary2 + " " + rotary3)
+  //print(rotary1 + " " + rotary2 + " " + rotary3)
 
 
 }
@@ -1259,9 +1266,10 @@ if(debugMode){console.log(capturedData)};
    
 //DRAW COMBINED WEAVE ONCE
 //STACK THE ACCUMULATED IMAGES ON TOP OF EACH OTHER 
-const scaledImageHeight = height / accumulatedImages.length;; // Set the height for the scaled images
+const scaledImageHeight = height / accumulatedImages.length; // Set the height for the scaled images
 const scaledImageWidth = (scaledImageHeight / height) * width; // Maintain aspect ratio
-const cropHeight= 110;//hesight of the part of the image we want to lose
+//the UI + a bit more for the gap
+const cropHeight= height*0.150;//hesight of the part of the image we want to lose
 
 for (let i = 0; i < accumulatedImages.length; i++) {
     const img = accumulatedImages[i];
