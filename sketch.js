@@ -34,8 +34,10 @@ let debounceDelay = 50; // Adjust the debounce delay as needed
 let lastDebounceTime1 = 0;
 let lastDebounceTime2 = 0;
 
-//rotary encoders
-let rotary1, rotary2, rotary3 = 0; //defaults
+//rotary encoders default values
+let rotary1 = 180
+let rotary2 = 180
+let rotary3 = 40; //defaults
 
 //weave controls
 let initialBoxHeight = 0; // Set the initial value for boxHeight
@@ -286,6 +288,8 @@ button2State = splitVal[8];
 rotary1 = splitVal[12];
 rotary2 = splitVal[11];
 rotary3 = splitVal[10];
+
+
 if(debugMode){console.log(rotary1 + "-" + rotary2 + "-" + rotary3)};
 
 //if(debugMode){console.log("btn1,2: "+ splitVal[8] + "," + splitVal[9])};
@@ -703,7 +707,7 @@ function drawWeave() {
   //MIDI MODE
   //const boxHeight = map(mappedControllerValues[1], 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
   //ROTARY MODE
-  const boxHeight = map(int(rotary1), 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
+  const boxHeight = 20;//map(int(rotary1), 0, 360, 1, 20); // Fixed height for each box - defines the thread size (1=small)
 
 //DRAWING SPEED
   // Increment the offset for the next set of sensor data
@@ -711,7 +715,9 @@ function drawWeave() {
   //weaveOffset += height / map(mappedControllerValues[2], 0, 360, 10, 1); // speed of drawing - 0=fast  10=good
   
   //Rotary MODE
-  weaveOffset += height / map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
+  //weaveOffset += height / map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
+  weaveOffset += height; /// map(int(rotary2), 0, 360, 20, 1); // speed of drawing - 0=fast  10=good, true for default value
+
 
   const centerX = width / 2; // Center of the screen
   const startY = height; // Start from the bottom of the screen
@@ -802,6 +808,7 @@ function drawWeave() {
    //text("press=", xStart, yStart*0.2);
    text("data", xStart+palleteBoxHeight*2.5, palleteBoxHeight*1.5);
 
+   
 
    // Draw knobs at the top of the screen with dial indicators
   const knobSize = 50; // Size of the knobs
@@ -857,34 +864,10 @@ function drawWeave() {
 
 
 
-
-
-    if (debugMode) {
-
-      //MIDI KNOBS
-      //print("1:height: " + round(mappedControllerValues[1]) + " 2:offset: " + round(mappedControllerValues[2]) + " 3:alpha" + round(mappedControllerValues[3]));
-
-      //console.log(currentPalette);
-      //console.log(palettes[selectedPaletteIndex-1]);
-      //noLoop();
-
-      console.log(sensors.toString());
-
-     // console.log(`thread width: ${round(boxHeight)}`, width-120, height - 60);
-      //console.log(`weave speed: ${round(mappedControllerValues[2])}`, width-120, height - 40);
-      //console.log(`brightness: ${round(mappedControllerValues[3])}`, width-120, height - 20);
-
-      /*
-      console.log(`thread width: ${round(boxHeight)}`);
-      console.log(`weave speed: ${round(mappedControllerValues[2])}`);
-      console.log(`brightness: ${round(mappedControllerValues[3])}`);
-      */
-    }
-    print(rotary1 + " " + rotary2 + " " + rotary3)
-
-
   // If the weaveOffset exceeds the height, reset it and move up vertically
   if (weaveOffset > height) {
+
+
     weaveOffset = 0;
 
         // Only draw when at least one sensor value is more than 50
@@ -894,11 +877,47 @@ function drawWeave() {
 
     // If verticalOffset exceeds the screen height, reset it based on the setting
     if (verticalOffset > height*0.9) { //distance to loop from the top of the screen
-        if(!resetToBottom){verticalOffset=0;viewMode = resultsScreen};
+
+      // Capture the current canvas pixels before resetting
+    //let img = get(0, verticalOffset, width, height-verticalOffset); // Capture the current canvas
+    let img = get(0, 0, width, height); // Capture the entire canvas
+
+    accumulatedImages.push(img); // Store the captured image
+
+
+
+        if(!resetToBottom){
+          verticalOffset=0;
+          viewMode = resultsScreen
+        };
       verticalOffset = resetToBottom ? 0 : height - boxHeight; //resettoBottom is either true or false
     }
   }
-  
+
+
+
+  if (debugMode) {
+
+    //MIDI KNOBS
+    //print("1:height: " + round(mappedControllerValues[1]) + " 2:offset: " + round(mappedControllerValues[2]) + " 3:alpha" + round(mappedControllerValues[3]));
+
+    //console.log(currentPalette);
+    //console.log(palettes[selectedPaletteIndex-1]);
+    //noLoop();
+
+    console.log(sensors.toString());
+
+   // console.log(`thread width: ${round(boxHeight)}`, width-120, height - 60);
+    //console.log(`weave speed: ${round(mappedControllerValues[2])}`, width-120, height - 40);
+    //console.log(`brightness: ${round(mappedControllerValues[3])}`, width-120, height - 20);
+
+    /*
+    console.log(`thread width: ${round(boxHeight)}`);
+    console.log(`weave speed: ${round(mappedControllerValues[2])}`);
+    console.log(`brightness: ${round(mappedControllerValues[3])}`);
+    */
+  }
+  print(rotary1 + " " + rotary2 + " " + rotary3)
 
 
 }
@@ -1178,6 +1197,9 @@ if(brushMode){noLoop()};
 ///////DASHBOARD DATA VIZ MODE ////
 ////////////////////////////
 
+let accumulatedImages = []; // Array to store pixel data for each reset
+
+
 function getColorValues(index) {
   // Ensure the index is within the bounds of the currentPalette array
   if (index < 0 || index >= currentPalette.length) {
@@ -1218,7 +1240,9 @@ if(debugMode){console.log(capturedData)};
     console.log('highest index ' + highestSensorIndex);}
 
     //draw once
-    dashDrawOnce = true;   
+    dashDrawOnce = true;  
+    /*
+    TEMP 
     drawCircularLineGraph(width*0.5, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
                           //width*0.2, height*0.27 ,0.08
     drawSensorLineRipples(width*0.5,height*0.45,0.1);//x,y,max
@@ -1230,16 +1254,35 @@ if(debugMode){console.log(capturedData)};
     drawSensorBoxesAndBars();
 
     drawLineGraph(); //max
+    */
+
+   
+//DRAW COMBINED WEAVE ONCE
+//STACK THE ACCUMULATED IMAGES ON TOP OF EACH OTHER 
+const scaledImageHeight = height / accumulatedImages.length;; // Set the height for the scaled images
+const scaledImageWidth = (scaledImageHeight / height) * width; // Maintain aspect ratio
+const cropHeight= 10;
+
+for (let i = 0; i < accumulatedImages.length; i++) {
+    const img = accumulatedImages[i];
+    const yPosition = height - (i + 1) * scaledImageHeight; // Position each image above the previous one
+    //image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight); // Draw the image centered at the bottom
+    image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight); // Draw the image centered at the bottom
 
   }
-  
+
+
+
+
+}
+};
+
+//}
   //draw here for looping
     //drawDataPie(width*0.1, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
   
   //
 
-
-}
 
 //COMBINED LINE GRAPHS
 function drawLineGraph(max) {
