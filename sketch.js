@@ -1261,13 +1261,15 @@ if(debugMode){console.log(capturedData)};
 //STACK THE ACCUMULATED IMAGES ON TOP OF EACH OTHER 
 const scaledImageHeight = height / accumulatedImages.length;; // Set the height for the scaled images
 const scaledImageWidth = (scaledImageHeight / height) * width; // Maintain aspect ratio
-const cropHeight= 10;
+const cropHeight= 110;//hesight of the part of the image we want to lose
 
 for (let i = 0; i < accumulatedImages.length; i++) {
     const img = accumulatedImages[i];
     const yPosition = height - (i + 1) * scaledImageHeight; // Position each image above the previous one
     //image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight); // Draw the image centered at the bottom
-    image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight); // Draw the image centered at the bottom
+    
+    //THIS CREATES THE WEAVE STACK - The last parameter (110) is the crop of the top of the captured image - The y xaxis starting point.
+    image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight,0,cropHeight); // Draw the image centered at the bottom
 
   }
 
