@@ -1248,8 +1248,9 @@ if(debugMode){console.log(capturedData)};
 
     //draw once
     dashDrawOnce = true;  
+    
+    //DRAW DASHBOARD COMPONENTS
     /*
-    TEMP 
     drawCircularLineGraph(width*0.5, height*0.45 ,0.1); //x,y,max ~~ 0.1,0.1,0.1 = top left , small
                           //width*0.2, height*0.27 ,0.08
     drawSensorLineRipples(width*0.5,height*0.45,0.1);//x,y,max
@@ -1262,28 +1263,49 @@ if(debugMode){console.log(capturedData)};
 
     drawLineGraph(); //max
     */
+    //END DASHBOARD COMPONENTS
+    
 
    
 //DRAW COMBINED WEAVE ONCE
-//STACK THE ACCUMULATED IMAGES ON TOP OF EACH OTHER 
+///ORIGINAL STACKED ON TOP OF EACH OTHER AFTER EACH PASS -- IN CASE I LOSE IT 
+/*
 const scaledImageHeight = height / accumulatedImages.length; // Set the height for the scaled images
 const scaledImageWidth = (scaledImageHeight / height) * width; // Maintain aspect ratio
 //the UI + a bit more for the gap
-const cropHeight= height*0.150;//hesight of the part of the image we want to lose
+const cropHeight= height*0.150;//height of the part of the image we want to lose
 
 for (let i = 0; i < accumulatedImages.length; i++) {
     const img = accumulatedImages[i];
     const yPosition = height - (i + 1) * scaledImageHeight; // Position each image above the previous one
     //image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight); // Draw the image centered at the bottom
     
-    //THIS CREATES THE WEAVE STACK - The last parameter (110) is the crop of the top of the captured image - The y xaxis starting point.
+    //THIS CREATES THE WEAVE STACK - The last parameter (cropheight) is the crop of the top of the captured image - The y xaxis starting point.
     image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight,0,cropHeight); // Draw the image centered at the bottom
 
   }
+//END WEAVE STACK
+*/
+//GOAL - PLACE THE ACCUMULATED IMAGES NEXT TO EACH OTHER WITH A SMALL GAP BETWEEN
 
+const scaledImageHeight = height / accumulatedImages.length; // this is how many images (passes) make up the stack. -Set the height for the scaled images
+//console.log(accumulatedImages.length)
+const scaledImageWidth = (scaledImageHeight / height) * width; // Maintain aspect ratio
+//the UI + a bit more for the gap
+const cropHeight= height*0.150;//height of the part of the image we want to lose
 
+for (let i = 0; i < accumulatedImages.length; i++) {
+    const img = accumulatedImages[i];
+    //  const yPosition = height - (i + 1) * scaledImageHeight; // Position each image above the previous one
+    const yPosition = height - (i + 1) * scaledImageHeight; //- (i + 1) * scaledImageHeight; // Position each image above the previous one
+    const xPosition = i * scaledImageWidth; // Position each image to the right of the last one
+    
+    //THIS CREATES THE WEAVE STACK - The last parameter (cropheight) is the crop of the top of the captured image - The y xaxis starting point.
+    //image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight,0,cropHeight); // Draw the image centered at the bottom
+    image(img, width / 2 - scaledImageWidth / 2, yPosition, scaledImageWidth, scaledImageHeight,0,cropHeight); // Draw the image centered at the bottom
 
-
+  }
+//END WEAVE STACK
 }
 };
 
